@@ -1,0 +1,1538 @@
+<!DOCTYPE html>
+<html lang="uz" class="light">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>O'quv Jadvali & To'lovlar Nazorati</title>
+  <meta name="description"
+    content="O'quv markazlari va repetitorlar uchun sodda, tezkor va qulay oylik to'lovlar jadvali (Excel formatida).">
+
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
+    rel="stylesheet">
+
+  <!-- FontAwesome 6 CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- SheetJS (xlsx.full.min.js) for true Excel .xlsx export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              300: '#a5b4fc',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(241, 245, 249, 0.5);
+    }
+
+    .dark ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.5);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.5);
+      border-radius: 9999px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(100, 116, 139, 0.8);
+    }
+
+    /* Sticky columns for Excel-like mobile view */
+    .sticky-col-num {
+      position: sticky;
+      left: 0;
+      z-index: 20;
+    }
+
+    .sticky-col-name {
+      position: sticky;
+      left: 44px;
+      z-index: 20;
+    }
+
+    .sticky-col-price {
+      position: sticky;
+      left: 244px;
+      z-index: 15;
+    }
+
+    @media (max-width: 640px) {
+      .sticky-col-price {
+        position: static;
+      }
+    }
+
+    /* Plus button pulse effect on click */
+    .btn-paid-active {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+      transform: scale(1.02);
+    }
+
+    .cell-hover:hover {
+      background-color: rgba(99, 102, 241, 0.05);
+    }
+
+    .dark .cell-hover:hover {
+      background-color: rgba(99, 102, 241, 0.12);
+    }
+
+    /* Smooth Transitions */
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200">
+
+  <!-- TOP NAVBAR -->
+  <header class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 shadow-sm">
+    <div class="max-w-[1600px] mx-auto px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3">
+      
+      <!-- Brand & Year -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-emerald-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+          <i class="fa-solid fa-table-cells text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white leading-tight">O'quv Jadvali</h1>
+            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
+              Excel Rejim
+            </span>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Guruhlar, barcha 12 oy to'lovlari va tezkor hisob-kitob</p>
+        </div>
+      </div>
+
+      <!-- Year Selector & Action Buttons -->
+      <div class="flex items-center gap-2">
+        <!-- Year Switcher -->
+        <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-1 border border-slate-200 dark:border-slate-700">
+          <button id="btnPrevYear" class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 transition" title="Oldingi yil">
+            <i class="fa-solid fa-chevron-left text-xs"></i>
+          </button>
+          <span id="currentYearDisplay" class="font-bold font-mono text-sm px-2 text-slate-800 dark:text-slate-200 select-none">2026</span>
+          <button id="btnNextYear" class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 transition" title="Keyingi yil">
+            <i class="fa-solid fa-chevron-right text-xs"></i>
+          </button>
+        </div>
+
+        <!-- Excel Export Button -->
+        <button id="btnExportExcel" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-semibold shadow-sm shadow-emerald-600/30 transition" title="Excel (.xlsx) yuklab olish">
+          <i class="fa-solid fa-file-excel text-sm"></i>
+          <span class="hidden md:inline">Excelga yuklash</span>
+        </button>
+
+        <!-- JSON Backup / Restore Dropdown Button -->
+        <div class="relative">
+          <button id="btnBackupMenu" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-medium border border-slate-200 dark:border-slate-700 transition" title="Baza (JSON) zaxira / yuklash">
+            <i class="fa-solid fa-database text-xs text-brand-500"></i>
+            <span class="hidden lg:inline">Zaxira</span>
+            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+          </button>
+          
+          <div id="backupDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 p-1.5 z-50 text-xs font-medium">
+            <button id="btnExportJson" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 text-slate-700 dark:text-slate-300">
+              <i class="fa-solid fa-download text-emerald-500"></i>
+              <span>JSON nusxa yuklash</span>
+            </button>
+            <label class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 text-slate-700 dark:text-slate-300 cursor-pointer">
+              <i class="fa-solid fa-upload text-blue-500"></i>
+              <span>JSON bazani tiklash</span>
+              <input type="file" id="importJsonInput" accept=".json" class="hidden" />
+            </label>
+          </div>
+        </div>
+
+        <!-- Dark Mode Toggle -->
+        <button id="btnThemeToggle" class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition" title="Mavzu (Kun/Tun)">
+          <i class="fa-solid fa-moon dark:hidden text-sm"></i>
+          <i class="fa-solid fa-sun hidden dark:block text-sm text-amber-400"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-[1600px] w-full mx-auto px-2 sm:px-6 py-4 flex-1 flex flex-col gap-4">
+
+    <!-- 1. GROUPS BAR & GROUP SETTINGS -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-3 sm:p-4 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+      
+      <!-- Group Tabs Scrollable -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none flex-1" id="groupTabsContainer">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Add Group & Group Actions -->
+      <div class="flex items-center gap-2 flex-shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-slate-800">
+        <button id="btnAddNewGroup" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 active:scale-95 text-white text-xs sm:text-sm font-semibold shadow-sm shadow-brand-600/30 transition">
+          <i class="fa-solid fa-plus text-xs"></i>
+          <span>Yangi Guruh</span>
+        </button>
+
+        <!-- Edit/Delete Current Group -->
+        <button id="btnEditGroup" class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition" title="Guruh nomini o'zgartirish">
+          <i class="fa-solid fa-pen text-xs"></i>
+        </button>
+        <button id="btnDeleteGroup" class="w-9 h-9 flex items-center justify-center rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition" title="Ushbu guruhni o'chirish">
+          <i class="fa-solid fa-trash-can text-xs"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- 2. GROUP PRICING & STATS BAR -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      
+      <!-- Card 1: Default Group Price (User requirement: eng yuqorida narxni 300 ming qilsa hammasiga 300 ming bo'ladi) -->
+      <div class="bg-gradient-to-br from-indigo-50 to-white dark:from-slate-900 dark:to-slate-900/80 rounded-2xl p-3.5 border border-indigo-100 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+        <div class="flex items-center justify-between text-xs text-indigo-700 dark:text-indigo-400 font-semibold mb-1">
+          <span class="flex items-center gap-1.5">
+            <i class="fa-solid fa-tag"></i> Guruh Standart Narxi
+          </span>
+          <span class="text-[10px] text-slate-400">barcha o'quvchiga</span>
+        </div>
+        <div class="flex items-center gap-2 mt-1">
+          <div class="relative flex-1">
+            <input type="number" id="groupDefaultPriceInput" step="10000" min="0"
+              class="w-full bg-white dark:bg-slate-800 border border-indigo-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-base sm:text-lg font-bold font-mono text-indigo-950 dark:text-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="300000">
+            <span class="absolute right-3 top-2.5 text-xs font-semibold text-slate-400 pointer-events-none">so'm</span>
+          </div>
+          <button id="btnApplyPriceToAll" class="px-2.5 py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-xl text-xs font-semibold shadow-sm transition flex-shrink-0" title="Ushbu narxni barcha o'quvchilarga o'rnatish">
+            Barchaga
+          </button>
+        </div>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 flex items-center gap-1">
+          <i class="fa-solid fa-circle-info text-[10px] text-indigo-500"></i> Narxni o'zgartirib "Barchaga" ni bosing
+        </p>
+      </div>
+
+      <!-- Card 2: Student Count -->
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-3.5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
+          <span class="flex items-center gap-1.5">
+            <i class="fa-solid fa-user-graduate text-blue-500"></i> O'quvchilar Soni
+          </span>
+          <span id="activeGroupBadge" class="text-[11px] font-semibold text-brand-600 bg-brand-50 dark:bg-brand-950/40 px-2 py-0.5 rounded-md">Guruh</span>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span id="totalStudentsCount" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">0</span>
+          <span class="text-xs text-slate-500 font-medium">nafar o'quvchi</span>
+        </div>
+        <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between">
+          <span>O'rtacha to'lov:</span>
+          <span id="avgStudentPrice" class="font-bold font-mono text-slate-700 dark:text-slate-300">0 so'm</span>
+        </div>
+      </div>
+
+      <!-- Card 3: Active Month Status -->
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-3.5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
+          <span class="flex items-center gap-1.5">
+            <i class="fa-solid fa-calendar-check text-emerald-500"></i> Tanlangan Oy Tushumi
+          </span>
+          <select id="activeMonthSelect" class="bg-slate-100 dark:bg-slate-800 text-xs font-semibold rounded-lg px-2 py-0.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 focus:outline-none">
+            <!-- Populated by JS -->
+          </select>
+        </div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="activeMonthCollected" class="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">0 so'm</span>
+        </div>
+        <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between">
+          <span>To'laganlar:</span>
+          <span id="activeMonthPaidRatio" class="font-bold text-emerald-600 dark:text-emerald-400">0 / 0 nafar</span>
+        </div>
+      </div>
+
+      <!-- Card 4: Total Group Revenue (Yearly) -->
+      <div class="bg-gradient-to-br from-emerald-50 to-white dark:from-slate-900 dark:to-slate-900/80 rounded-2xl p-3.5 border border-emerald-100 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+        <div class="flex items-center justify-between text-xs text-emerald-700 dark:text-emerald-400 font-semibold">
+          <span class="flex items-center gap-1.5">
+            <i class="fa-solid fa-coins"></i> Guruh Yillik Jami Tushumi
+          </span>
+          <span id="statYearBadge" class="font-mono text-[11px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">2026</span>
+        </div>
+        <div class="mt-2">
+          <span id="totalYearCollected" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">0 so'm</span>
+        </div>
+        <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between">
+          <span>Jami qabul qilingan oylar:</span>
+          <span id="totalPaidMonthsCount" class="font-bold font-mono text-emerald-600 dark:text-emerald-400">0 ta plyus</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 3. QUICK ADD STUDENT & SEARCH TOOLBAR (Excel-like continuous adding) -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-3 sm:p-4 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+      
+      <!-- Quick Add Student Form -->
+      <form id="quickAddStudentForm" class="flex flex-wrap sm:flex-nowrap items-center gap-2 flex-1">
+        <div class="relative flex-1 min-w-[200px]">
+          <span class="absolute left-3 top-2.5 text-slate-400 text-xs">
+            <i class="fa-solid fa-user-plus"></i>
+          </span>
+          <input type="text" id="newStudentNameInput" required
+            placeholder="Familiya va Ism kiriting (Masalan: Aliyev Vali) va Enter bosing..."
+            class="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white">
+        </div>
+
+        <!-- Optional custom price for this student -->
+        <div class="relative w-36 sm:w-44 flex-shrink-0">
+          <input type="number" id="newStudentPriceInput" step="10000" min="0"
+            placeholder="Oylik to'lov"
+            class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-bold font-mono focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white"
+            title="Ushbu o'quvchi uchun individual oylik narx (sukut bo'yicha guruh narxi)">
+          <span class="absolute right-2.5 top-2.5 text-[10px] text-slate-400 font-semibold pointer-events-none">so'm</span>
+        </div>
+
+        <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-sm shadow-brand-600/30 transition flex items-center justify-center gap-1.5 flex-shrink-0">
+          <i class="fa-solid fa-plus text-xs"></i>
+          <span>O'quvchi qo'shish</span>
+        </button>
+      </form>
+
+      <!-- Search & Filters -->
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <div class="relative w-full sm:w-60">
+          <span class="absolute left-3 top-2.5 text-slate-400 text-xs">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </span>
+          <input type="text" id="searchInput" placeholder="Qidirish (Ism)..."
+            class="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white">
+          <button id="btnClearSearch" class="hidden absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 text-xs">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Month Filter status: All / Only Paid / Debtor -->
+        <select id="filterStatusSelect" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none">
+          <option value="all">Barchasi</option>
+          <option value="paid">Faqat to'laganlar</option>
+          <option value="debt">Qarzdorlar</option>
+        </select>
+      </div>
+
+    </div>
+
+    <!-- 4. EXCEL-LIKE SPREADSHEET TABLE -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col flex-1">
+      
+      <!-- Table Header & Instructions note -->
+      <div class="px-4 py-2.5 bg-slate-50/70 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-circle-question text-brand-500"></i>
+          <span>O'quvchi to'lov qilganda tegishli oy ustunidagi katakchani bosing — u <b>plyus (+)</b> bo'ladi va narx avtomatik hisoblanadi.</span>
+        </div>
+        <div class="flex items-center gap-3 text-[11px] font-medium">
+          <span class="flex items-center gap-1.5">
+            <span class="w-3 h-3 rounded bg-emerald-500 inline-block"></span> To'langan (+)
+          </span>
+          <span class="flex items-center gap-1.5">
+            <span class="w-3 h-3 rounded bg-slate-200 dark:bg-slate-700 inline-block"></span> Kutilmoqda (—)
+          </span>
+        </div>
+      </div>
+
+      <!-- Scrollable Table Container -->
+      <div class="overflow-x-auto relative flex-1 touch-pan-x" id="tableScrollContainer">
+        <table class="w-full text-left border-collapse text-xs sm:text-sm select-none" id="attendanceTable">
+          <thead>
+            <tr class="bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700 text-xs uppercase tracking-wider">
+              <!-- # -->
+              <th class="py-3 px-2.5 text-center w-11 sticky-col-num bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">#</th>
+              
+              <!-- Familiya Ism -->
+              <th class="py-3 px-3 min-w-[200px] max-w-[220px] sticky-col-name bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.06)]">
+                Familiya va Ism
+              </th>
+
+              <!-- Oylik To'lov Narxi -->
+              <th class="py-3 px-2.5 min-w-[110px] text-right sticky-col-price bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700" title="Har bir o'quvchining oylik to'lovi (tahrirlash uchun bosing)">
+                Oylik Narx
+              </th>
+
+              <!-- 12 Months Columns -->
+              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="1">Yan</th>
+              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="2">Fev</th>
+              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="3">Mar</th>
+              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="4">Apr</th>
+              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="5">May</th>
+              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="6">Iyun</th>
+              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="7">Iyul</th>
+              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="8">Avg</th>
+              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="9">Sen</th>
+              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="10">Okt</th>
+              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="11">Noy</th>
+              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="12">Dek</th>
+
+              <!-- Stats Columns -->
+              <th class="py-3 px-2 text-center min-w-[70px] border-r border-slate-200 dark:border-slate-700" title="To'langan oylar soni">Oylar</th>
+              <th class="py-3 px-3 text-right min-w-[120px] border-r border-slate-200 dark:border-slate-700">Jami To'langan</th>
+              <th class="py-3 px-2 text-center w-16">Amal</th>
+            </tr>
+          </thead>
+
+          <tbody id="tableBody" class="divide-y divide-slate-200 dark:divide-slate-800">
+            <!-- Student rows dynamically generated by JS -->
+          </tbody>
+
+          <!-- Table Summary Footer (JAMI) -->
+          <tfoot id="tableFoot" class="bg-slate-100/90 dark:bg-slate-800/90 font-bold border-t-2 border-slate-300 dark:border-slate-700 text-xs">
+            <!-- Summary calculations generated by JS -->
+          </tfoot>
+        </table>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- MODALS -->
+
+  <!-- 1. ADD / EDIT GROUP MODAL -->
+  <div id="groupModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
+      <div class="flex items-center justify-between mb-4">
+        <h3 id="groupModalTitle" class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Yangi Guruh Yaratish</h3>
+        <button id="btnCloseGroupModal" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="groupForm" class="flex flex-col gap-4">
+        <input type="hidden" id="groupEditId" value="">
+        
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Guruh Nomi</label>
+          <input type="text" id="groupNameInput" required placeholder="Masalan: Ingliz tili - Pre-Intermediate"
+            class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Standart Oylik To'lov (so'm)</label>
+          <div class="relative">
+            <input type="number" id="groupModalPriceInput" required step="10000" min="0" placeholder="300000"
+              class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold font-mono focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white">
+            <span class="absolute right-3 top-3 text-xs font-semibold text-slate-400">so'm</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">Ushbu guruhdagi yangi o'quvchilar uchun asosiy oylik to'lov summasi.</p>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" id="btnCancelGroupModal" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            Bekor qilish
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-semibold shadow-sm shadow-brand-600/30 transition">
+            Saqlash
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. EDIT STUDENT MODAL -->
+  <div id="studentModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">O'quvchi Ma'lumotlarini Tahrirlash</h3>
+        <button id="btnCloseStudentModal" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="studentEditForm" class="flex flex-col gap-4">
+        <input type="hidden" id="studentEditId" value="">
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Familiya va Ism</label>
+          <input type="text" id="editStudentName" required placeholder="Masalan: Karimov Alisher"
+            class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            Individual Oylik To'lov Narxi (so'm)
+          </label>
+          <div class="relative">
+            <input type="number" id="editStudentPrice" required step="10000" min="0" placeholder="200000"
+              class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold font-mono focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white">
+            <span class="absolute right-3 top-3 text-xs font-semibold text-slate-400">so'm</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">Masalan, agar bu o'quvchiga chegirma bo'lsa yoki narxi 200 000 so'm bo'lsa, shu yerda belgilang.</p>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" id="btnCancelStudentModal" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            Bekor qilish
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-semibold shadow-sm transition">
+            Saqlash
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- JAVASCRIPT APPLICATION LOGIC -->
+  <script>
+    /**
+     * O'QUV JADVALI & TO'LOVLAR NAZORATI
+     * Avtomatlashtirilgan, Excel-rejimli lokal tizim
+     */
+
+    // Month Names
+    const MONTHS = [
+      { id: 1, name: 'Yanvar', short: 'Yan' },
+      { id: 2, name: 'Fevral', short: 'Fev' },
+      { id: 3, name: 'Mart', short: 'Mar' },
+      { id: 4, name: 'Aprel', short: 'Apr' },
+      { id: 5, name: 'May', short: 'May' },
+      { id: 6, name: 'Iyun', short: 'Iyun' },
+      { id: 7, name: 'Iyul', short: 'Iyul' },
+      { id: 8, name: 'Avgust', short: 'Avg' },
+      { id: 9, name: 'Sentabr', short: 'Sen' },
+      { id: 10, name: 'Oktabr', short: 'Okt' },
+      { id: 11, name: 'Noyabr', short: 'Noy' },
+      { id: 12, name: 'Dekabr', short: 'Dek' }
+    ];
+
+    // LocalStorage Key
+    const STORAGE_KEY = 'jadval_edu_app_data';
+
+    // Application State
+    let appData = {
+      selectedYear: 2026,
+      activeGroupId: null,
+      activeMonth: 10, // Default to October as mentioned in request
+      groups: []
+    };
+
+    // Helper: Format Money
+    function formatMoney(amount) {
+      if (amount === undefined || amount === null || isNaN(amount)) return '0';
+      return Number(amount).toLocaleString('uz-UZ').replace(/,/g, ' ');
+    }
+
+    // Toast Notification
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      
+      const icons = {
+        success: 'fa-circle-check text-emerald-500',
+        error: 'fa-circle-exclamation text-rose-500',
+        info: 'fa-circle-info text-blue-500'
+      };
+
+      toast.className = `flex items-center gap-2.5 px-4 py-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 pointer-events-auto transition-all transform duration-200 translate-y-4 opacity-0`;
+      toast.innerHTML = `
+        <i class="fa-solid ${icons[type] || icons.success} text-base"></i>
+        <span>${message}</span>
+      `;
+
+      container.appendChild(toast);
+      
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-4', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 250);
+      }, 2500);
+    }
+
+    // Default Demo Data Generator
+    function getInitialData() {
+      return {
+        selectedYear: 2026,
+        activeGroupId: 'grp_1',
+        activeMonth: 10,
+        groups: [
+          {
+            id: 'grp_1',
+            name: 'Ingliz tili - 1-guruh',
+            defaultPrice: 300000,
+            students: [
+              {
+                id: 'std_1',
+                name: 'Karimov Jasur',
+                price: 300000,
+                payments: {
+                  '2026-1': true,
+                  '2026-2': true,
+                  '2026-3': true,
+                  '2026-9': true,
+                  '2026-10': true
+                }
+              },
+              {
+                id: 'std_2',
+                name: 'Olimov Bekzod',
+                price: 200000, // Custom discounted price example
+                payments: {
+                  '2026-9': true,
+                  '2026-10': true
+                }
+              },
+              {
+                id: 'std_3',
+                name: 'Rustamova Shahnoza',
+                price: 300000,
+                payments: {
+                  '2026-10': true
+                }
+              },
+              {
+                id: 'std_4',
+                name: 'Tursunov Dilshod',
+                price: 300000,
+                payments: {
+                  '2026-1': true,
+                  '2026-2': true,
+                  '2026-3': true,
+                  '2026-4': true,
+                  '2026-5': true
+                }
+              },
+              {
+                id: 'std_5',
+                name: 'Abdullayeva Madina',
+                price: 300000,
+                payments: {
+                  '2026-9': true,
+                  '2026-10': true
+                }
+              }
+            ]
+          },
+          {
+            id: 'grp_2',
+            name: 'Matematika - Abituriyent',
+            defaultPrice: 350000,
+            students: [
+              {
+                id: 'std_201',
+                name: 'Nazarov Farhod',
+                price: 350000,
+                payments: {
+                  '2026-9': true,
+                  '2026-10': true
+                }
+              },
+              {
+                id: 'std_202',
+                name: 'Sobirova Dilnoza',
+                price: 350000,
+                payments: {
+                  '2026-10': true
+                }
+              }
+            ]
+          }
+        ]
+      };
+    }
+
+    // Save Data to LocalStorage
+    function saveData() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+      } catch (e) {
+        console.error('Error saving data to localStorage', e);
+      }
+    }
+
+    // Load Data from LocalStorage
+    function loadData() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          appData = JSON.parse(stored);
+        } catch (e) {
+          console.error('Failed to parse localStorage data', e);
+          appData = getInitialData();
+        }
+      } else {
+        appData = getInitialData();
+        saveData();
+      }
+
+      // Ensure valid active group
+      if (!appData.groups || appData.groups.length === 0) {
+        appData = getInitialData();
+      }
+      if (!appData.activeGroupId || !appData.groups.find(g => g.id === appData.activeGroupId)) {
+        appData.activeGroupId = appData.groups[0]?.id || null;
+      }
+      if (!appData.selectedYear) {
+        appData.selectedYear = 2026;
+      }
+      if (!appData.activeMonth) {
+        appData.activeMonth = 10;
+      }
+    }
+
+    // Get Active Group Object
+    function getActiveGroup() {
+      return appData.groups.find(g => g.id === appData.activeGroupId) || null;
+    }
+
+    // Render Group Tabs
+    function renderGroupTabs() {
+      const container = document.getElementById('groupTabsContainer');
+      container.innerHTML = '';
+
+      appData.groups.forEach(group => {
+        const isActive = group.id === appData.activeGroupId;
+        const studentCount = group.students ? group.students.length : 0;
+        
+        const tabBtn = document.createElement('button');
+        tabBtn.className = `flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition flex-shrink-0 ${
+          isActive
+            ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/30'
+            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+        }`;
+        
+        tabBtn.innerHTML = `
+          <i class="fa-solid fa-users text-xs ${isActive ? 'text-white' : 'text-slate-400'}"></i>
+          <span>${group.name}</span>
+          <span class="text-[10px] px-1.5 py-0.5 rounded-full font-mono ${
+            isActive ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+          }">${studentCount}</span>
+        `;
+
+        tabBtn.addEventListener('click', () => {
+          if (appData.activeGroupId !== group.id) {
+            appData.activeGroupId = group.id;
+            saveData();
+            renderAll();
+          }
+        });
+
+        container.appendChild(tabBtn);
+      });
+    }
+
+    // Render Stats & Default Pricing Controls
+    function renderStats() {
+      const group = getActiveGroup();
+      if (!group) return;
+
+      const year = appData.selectedYear;
+      const month = appData.activeMonth;
+
+      // Update Group Pricing input
+      const priceInput = document.getElementById('groupDefaultPriceInput');
+      priceInput.value = group.defaultPrice || 300000;
+
+      // Update Quick Add Student Price placeholder/default
+      const newStudentPriceInput = document.getElementById('newStudentPriceInput');
+      newStudentPriceInput.placeholder = `${formatMoney(group.defaultPrice)} so'm`;
+      if (!newStudentPriceInput.value) {
+        newStudentPriceInput.value = group.defaultPrice;
+      }
+
+      // Group badge in card
+      document.getElementById('activeGroupBadge').textContent = group.name;
+      document.getElementById('statYearBadge').textContent = year;
+
+      // Student Count
+      const students = group.students || [];
+      document.getElementById('totalStudentsCount').textContent = students.length;
+
+      // Average Price
+      let totalPrice = 0;
+      students.forEach(s => totalPrice += Number(s.price || group.defaultPrice));
+      const avgPrice = students.length > 0 ? Math.round(totalPrice / students.length) : group.defaultPrice;
+      document.getElementById('avgStudentPrice').textContent = `${formatMoney(avgPrice)} so'm`;
+
+      // Active Month Stats
+      let monthPaidCount = 0;
+      let monthCollected = 0;
+
+      // Total Year Stats
+      let totalYearPaidMonths = 0;
+      let totalYearCollected = 0;
+
+      students.forEach(s => {
+        const studentPrice = Number(s.price || group.defaultPrice);
+        const payments = s.payments || {};
+
+        // Month check
+        if (payments[`${year}-${month}`]) {
+          monthPaidCount++;
+          monthCollected += studentPrice;
+        }
+
+        // Year check
+        for (let m = 1; m <= 12; m++) {
+          if (payments[`${year}-${m}`]) {
+            totalYearPaidMonths++;
+            totalYearCollected += studentPrice;
+          }
+        }
+      });
+
+      document.getElementById('activeMonthCollected').textContent = `${formatMoney(monthCollected)} so'm`;
+      document.getElementById('activeMonthPaidRatio').textContent = `${monthPaidCount} / ${students.length} nafar`;
+
+      document.getElementById('totalYearCollected').textContent = `${formatMoney(totalYearCollected)} so'm`;
+      document.getElementById('totalPaidMonthsCount').textContent = `${totalYearPaidMonths} ta plyus`;
+    }
+
+    // Render Month Select dropdown in header
+    function renderMonthSelect() {
+      const select = document.getElementById('activeMonthSelect');
+      select.innerHTML = '';
+
+      MONTHS.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = `${m.name}`;
+        if (m.id === appData.activeMonth) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
+    // Toggle Payment for a student in a specific month
+    function togglePayment(studentId, monthId) {
+      const group = getActiveGroup();
+      if (!group) return;
+
+      const student = group.students.find(s => s.id === studentId);
+      if (!student) return;
+
+      if (!student.payments) student.payments = {};
+      const key = `${appData.selectedYear}-${monthId}`;
+      const wasPaid = !!student.payments[key];
+
+      student.payments[key] = !wasPaid;
+
+      saveData();
+      renderTableOnly(); // Fast update
+      renderStats();
+
+      const monthName = MONTHS.find(m => m.id === monthId)?.name || `${monthId}-oy`;
+      if (!wasPaid) {
+        showToast(`${student.name}: ${monthName} uchun to'lov qabul qilindi (+)!`, 'success');
+      } else {
+        showToast(`${student.name}: ${monthName} to'lovi bekor qilindi`, 'info');
+      }
+    }
+
+    // Filter Students based on search and status
+    function getFilteredStudents() {
+      const group = getActiveGroup();
+      if (!group) return [];
+
+      const query = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+      const filterStatus = document.getElementById('filterStatusSelect').value;
+      const year = appData.selectedYear;
+      const month = appData.activeMonth;
+
+      return (group.students || []).filter(student => {
+        // Search filter
+        if (query && !student.name.toLowerCase().includes(query)) {
+          return false;
+        }
+
+        // Status filter for current month
+        if (filterStatus === 'paid') {
+          return !!(student.payments && student.payments[`${year}-${month}`]);
+        } else if (filterStatus === 'debt') {
+          return !(student.payments && student.payments[`${year}-${month}`]);
+        }
+
+        return true;
+      });
+    }
+
+    // Render Table Content
+    function renderTableOnly() {
+      const group = getActiveGroup();
+      const tbody = document.getElementById('tableBody');
+      const tfoot = document.getElementById('tableFoot');
+      tbody.innerHTML = '';
+
+      if (!group) {
+        tbody.innerHTML = `<tr><td colspan="18" class="text-center py-10 text-slate-400">Guruh tanlanmagan</td></tr>`;
+        tfoot.innerHTML = '';
+        return;
+      }
+
+      const students = getFilteredStudents();
+      const year = appData.selectedYear;
+
+      if (students.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="18" class="text-center py-12 text-slate-400 dark:text-slate-500">
+              <i class="fa-solid fa-user-slash text-2xl mb-2 block"></i>
+              <p class="font-medium">O'quvchilar mavjud emas yoki qidiruvga mos kelmadi.</p>
+              <p class="text-xs text-slate-400 mt-1">Yuqoridagi maydonga o'quvchi ismini yozib qo'shishingiz mumkin.</p>
+            </td>
+          </tr>
+        `;
+        tfoot.innerHTML = '';
+        return;
+      }
+
+      // Track month totals for footer
+      const monthTotals = Array(13).fill(0); // 1..12
+      let grandTotal = 0;
+      let totalStudentPrices = 0;
+
+      students.forEach((student, index) => {
+        const studentPrice = Number(student.price || group.defaultPrice);
+        totalStudentPrices += studentPrice;
+        const payments = student.payments || {};
+
+        let paidCount = 0;
+        for (let m = 1; m <= 12; m++) {
+          if (payments[`${year}-${m}`]) {
+            paidCount++;
+            monthTotals[m] += studentPrice;
+          }
+        }
+        const studentTotalPaid = paidCount * studentPrice;
+        grandTotal += studentTotalPaid;
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors group';
+
+        // Check if custom price differs from group default price
+        const hasCustomPrice = student.price && student.price !== group.defaultPrice;
+
+        // Construct HTML
+        let monthsHtml = '';
+        for (let m = 1; m <= 12; m++) {
+          const isPaid = !!payments[`${year}-${m}`];
+          const isCurrentActiveMonth = (m === appData.activeMonth);
+
+          monthsHtml += `
+            <td class="p-1 sm:p-1.5 text-center border-r border-slate-200 dark:border-slate-800 ${isCurrentActiveMonth ? 'bg-indigo-50/30 dark:bg-indigo-950/20' : ''}">
+              <button onclick="togglePayment('${student.id}', ${m})"
+                class="w-full py-1.5 sm:py-2 px-1 rounded-lg text-xs font-bold font-mono transition-all duration-150 flex items-center justify-center gap-1 ${
+                  isPaid
+                    ? 'btn-paid-active'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200'
+                }"
+                title="${MONTHS[m-1].name} - ${isPaid ? 'To\'langan (+)' : 'To\'lanmagan (-)'}">
+                ${isPaid ? '<i class="fa-solid fa-plus text-[11px]"></i>' : '<span class="text-slate-300 dark:text-slate-600">—</span>'}
+              </button>
+            </td>
+          `;
+        }
+
+        tr.innerHTML = `
+          <!-- # -->
+          <td class="py-2.5 px-2 text-center text-slate-400 dark:text-slate-500 font-mono text-xs sticky-col-num bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
+            ${index + 1}
+          </td>
+
+          <!-- Familiya Ism -->
+          <td class="py-2.5 px-3 sticky-col-name bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.06)]">
+            <div class="flex items-center justify-between gap-1.5">
+              <span class="font-bold text-slate-900 dark:text-slate-100 hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer truncate" onclick="openEditStudent('${student.id}')" title="Tahrirlash uchun bosing">
+                ${student.name}
+              </span>
+              <button onclick="openEditStudent('${student.id}')" class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-brand-500 text-xs transition p-1" title="Tahrirlash">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+            </div>
+          </td>
+
+          <!-- Oylik Narx (Click to customize) -->
+          <td class="py-2.5 px-2.5 text-right sticky-col-price bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
+            <button onclick="openEditStudent('${student.id}')" class="px-2 py-1 rounded-md text-xs font-mono font-bold transition ${
+              hasCustomPrice
+                ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+            }" title="Individual narxni o'zgartirish">
+              ${formatMoney(studentPrice)}
+            </button>
+          </td>
+
+          <!-- 12 Months -->
+          ${monthsHtml}
+
+          <!-- Paid Months Count -->
+          <td class="py-2.5 px-2 text-center border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-xs ${
+            paidCount > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'
+          }">
+            ${paidCount} oy
+          </td>
+
+          <!-- Total Paid -->
+          <td class="py-2.5 px-3 text-right font-mono font-extrabold text-xs sm:text-sm border-r border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+            ${formatMoney(studentTotalPaid)}
+          </td>
+
+          <!-- Actions -->
+          <td class="py-2.5 px-2 text-center">
+            <button onclick="deleteStudent('${student.id}')" class="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition" title="O'chirish">
+              <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+
+      // Render Summary Footer (JAMI)
+      let footerMonthsHtml = '';
+      for (let m = 1; m <= 12; m++) {
+        footerMonthsHtml += `
+          <td class="py-3 px-1 text-center font-mono text-[11px] border-r border-slate-200 dark:border-slate-700 ${
+            m === appData.activeMonth ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/30 font-extrabold' : 'text-slate-600 dark:text-slate-300'
+          }">
+            ${monthTotals[m] > 0 ? formatMoney(monthTotals[m]) : '—'}
+          </td>
+        `;
+      }
+
+      tfoot.innerHTML = `
+        <tr>
+          <td class="py-3 px-2 text-center sticky-col-num bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 font-mono text-slate-400">
+            Σ
+          </td>
+          <td class="py-3 px-3 sticky-col-name bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
+            JAMI (${students.length} nafar)
+          </td>
+          <td class="py-3 px-2.5 text-right sticky-col-price bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 font-mono text-xs text-slate-500">
+            ~${formatMoney(Math.round(totalStudentPrices / (students.length || 1)))}
+          </td>
+          ${footerMonthsHtml}
+          <td class="py-3 px-2 text-center border-r border-slate-200 dark:border-slate-700 font-mono text-xs text-slate-500">
+            Jami
+          </td>
+          <td class="py-3 px-3 text-right font-mono font-extrabold text-sm sm:text-base text-emerald-600 dark:text-emerald-400 border-r border-slate-200 dark:border-slate-700">
+            ${formatMoney(grandTotal)} so'm
+          </td>
+          <td class="py-3 px-2"></td>
+        </tr>
+      `;
+    }
+
+    // Render Everything
+    function renderAll() {
+      document.getElementById('currentYearDisplay').textContent = appData.selectedYear;
+      renderGroupTabs();
+      renderMonthSelect();
+      renderStats();
+      renderTableOnly();
+    }
+
+    // --- STUDENT ACTIONS ---
+
+    // Quick Add Student
+    document.getElementById('quickAddStudentForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const group = getActiveGroup();
+      if (!group) {
+        showToast('Iltimos, avval guruh tanlang!', 'error');
+        return;
+      }
+
+      const nameInput = document.getElementById('newStudentNameInput');
+      const priceInput = document.getElementById('newStudentPriceInput');
+
+      const name = nameInput.value.trim();
+      if (!name) return;
+
+      const price = Number(priceInput.value) || group.defaultPrice || 300000;
+
+      const newStudent = {
+        id: 'std_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        name: name,
+        price: price,
+        payments: {}
+      };
+
+      if (!group.students) group.students = [];
+      group.students.push(newStudent);
+
+      saveData();
+      renderAll();
+
+      showToast(`"${name}" muvaffaqiyatli qo'shildi!`, 'success');
+
+      // Clear name and keep focus for rapid Excel-like data entry
+      nameInput.value = '';
+      nameInput.focus();
+    });
+
+    // Delete Student
+    window.deleteStudent = function(studentId) {
+      const group = getActiveGroup();
+      if (!group) return;
+
+      const student = group.students.find(s => s.id === studentId);
+      if (!student) return;
+
+      if (confirm(`Haqiqatan ham "${student.name}" o'quvchisini ushbu guruhdan o'chirmoqchimisiz?`)) {
+        group.students = group.students.filter(s => s.id !== studentId);
+        saveData();
+        renderAll();
+        showToast(`"${student.name}" o'chirildi`, 'info');
+      }
+    };
+
+    // Open Edit Student Modal
+    window.openEditStudent = function(studentId) {
+      const group = getActiveGroup();
+      if (!group) return;
+
+      const student = group.students.find(s => s.id === studentId);
+      if (!student) return;
+
+      document.getElementById('studentEditId').value = student.id;
+      document.getElementById('editStudentName').value = student.name;
+      document.getElementById('editStudentPrice').value = student.price || group.defaultPrice;
+
+      document.getElementById('studentModal').classList.remove('hidden');
+      document.getElementById('editStudentName').focus();
+    };
+
+    // Close Student Modal
+    function closeStudentModal() {
+      document.getElementById('studentModal').classList.add('hidden');
+    }
+    document.getElementById('btnCloseStudentModal').addEventListener('click', closeStudentModal);
+    document.getElementById('btnCancelStudentModal').addEventListener('click', closeStudentModal);
+
+    // Save Student Edits
+    document.getElementById('studentEditForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const group = getActiveGroup();
+      if (!group) return;
+
+      const id = document.getElementById('studentEditId').value;
+      const student = group.students.find(s => s.id === id);
+      if (!student) return;
+
+      student.name = document.getElementById('editStudentName').value.trim();
+      student.price = Number(document.getElementById('editStudentPrice').value) || group.defaultPrice;
+
+      saveData();
+      renderAll();
+      closeStudentModal();
+      showToast(`O'quvchi ma'lumotlari yangilandi!`, 'success');
+    });
+
+    // --- GROUP ACTIONS ---
+
+    // Apply Default Group Price to All Students
+    // (User requirement: eng yuqorida narxni 300 ming qilsa shu guruhni hammasiga 300 ming bo`ladi)
+    document.getElementById('btnApplyPriceToAll').addEventListener('click', () => {
+      const group = getActiveGroup();
+      if (!group) return;
+
+      const newPrice = Number(document.getElementById('groupDefaultPriceInput').value);
+      if (!newPrice || newPrice <= 0) {
+        showToast('Iltimos, to\'g\'ri summa kiriting!', 'error');
+        return;
+      }
+
+      if (confirm(`Guruhdagi barcha (${group.students?.length || 0}) nafar o'quvchining oylik to'lovi ${formatMoney(newPrice)} so'mga o'zgartirilsinmi?`)) {
+        group.defaultPrice = newPrice;
+        (group.students || []).forEach(s => {
+          s.price = newPrice;
+        });
+
+        saveData();
+        renderAll();
+        showToast(`Barcha o'quvchilarga ${formatMoney(newPrice)} so'm narx o'rnatildi!`, 'success');
+      }
+    });
+
+    // Change group default price on input change (for new students)
+    document.getElementById('groupDefaultPriceInput').addEventListener('change', (e) => {
+      const group = getActiveGroup();
+      if (!group) return;
+      const val = Number(e.target.value);
+      if (val > 0) {
+        group.defaultPrice = val;
+        saveData();
+        renderStats();
+      }
+    });
+
+    // Open Add Group Modal
+    document.getElementById('btnAddNewGroup').addEventListener('click', () => {
+      document.getElementById('groupEditId').value = '';
+      document.getElementById('groupNameInput').value = '';
+      document.getElementById('groupModalPriceInput').value = 300000;
+      document.getElementById('groupModalTitle').textContent = 'Yangi Guruh Yaratish';
+      document.getElementById('groupModal').classList.remove('hidden');
+      document.getElementById('groupNameInput').focus();
+    });
+
+    // Open Edit Current Group
+    document.getElementById('btnEditGroup').addEventListener('click', () => {
+      const group = getActiveGroup();
+      if (!group) return;
+
+      document.getElementById('groupEditId').value = group.id;
+      document.getElementById('groupNameInput').value = group.name;
+      document.getElementById('groupModalPriceInput').value = group.defaultPrice;
+      document.getElementById('groupModalTitle').textContent = 'Guruhni Tahrirlash';
+      document.getElementById('groupModal').classList.remove('hidden');
+      document.getElementById('groupNameInput').focus();
+    });
+
+    // Close Group Modal
+    function closeGroupModal() {
+      document.getElementById('groupModal').classList.add('hidden');
+    }
+    document.getElementById('btnCloseGroupModal').addEventListener('click', closeGroupModal);
+    document.getElementById('btnCancelGroupModal').addEventListener('click', closeGroupModal);
+
+    // Save Group
+    document.getElementById('groupForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const editId = document.getElementById('groupEditId').value;
+      const name = document.getElementById('groupNameInput').value.trim();
+      const defaultPrice = Number(document.getElementById('groupModalPriceInput').value) || 300000;
+
+      if (!name) return;
+
+      if (editId) {
+        // Edit existing group
+        const group = appData.groups.find(g => g.id === editId);
+        if (group) {
+          group.name = name;
+          group.defaultPrice = defaultPrice;
+          showToast(`Guruh muvaffaqiyatli yangilandi!`, 'success');
+        }
+      } else {
+        // Create new group
+        const newGroup = {
+          id: 'grp_' + Date.now(),
+          name: name,
+          defaultPrice: defaultPrice,
+          students: []
+        };
+        appData.groups.push(newGroup);
+        appData.activeGroupId = newGroup.id;
+        showToast(`"${name}" guruhi yaratildi!`, 'success');
+      }
+
+      saveData();
+      closeGroupModal();
+      renderAll();
+    });
+
+    // Delete Current Group
+    document.getElementById('btnDeleteGroup').addEventListener('click', () => {
+      const group = getActiveGroup();
+      if (!group) return;
+
+      if (appData.groups.length <= 1) {
+        showToast('Oxirgi qolgan guruhni o\'chirib bo\'lmaydi!', 'error');
+        return;
+      }
+
+      if (confirm(`Haqiqatan ham "${group.name}" guruhini va undagi barcha to'lovlarni o'chirmoqchimisiz?`)) {
+        appData.groups = appData.groups.filter(g => g.id !== group.id);
+        appData.activeGroupId = appData.groups[0].id;
+        saveData();
+        renderAll();
+        showToast(`Guruh o'chirildi`, 'info');
+      }
+    });
+
+    // --- YEAR & MONTH CONTROLS ---
+
+    document.getElementById('btnPrevYear').addEventListener('click', () => {
+      appData.selectedYear--;
+      saveData();
+      renderAll();
+    });
+
+    document.getElementById('btnNextYear').addEventListener('click', () => {
+      appData.selectedYear++;
+      saveData();
+      renderAll();
+    });
+
+    document.getElementById('activeMonthSelect').addEventListener('change', (e) => {
+      appData.activeMonth = Number(e.target.value);
+      saveData();
+      renderStats();
+      renderTableOnly();
+    });
+
+    // Search and Status Filters
+    const searchInput = document.getElementById('searchInput');
+    const btnClearSearch = document.getElementById('btnClearSearch');
+
+    searchInput.addEventListener('input', () => {
+      if (searchInput.value.trim()) {
+        btnClearSearch.classList.remove('hidden');
+      } else {
+        btnClearSearch.classList.add('hidden');
+      }
+      renderTableOnly();
+    });
+
+    btnClearSearch.addEventListener('click', () => {
+      searchInput.value = '';
+      btnClearSearch.classList.add('hidden');
+      renderTableOnly();
+      searchInput.focus();
+    });
+
+    document.getElementById('filterStatusSelect').addEventListener('change', () => {
+      renderTableOnly();
+    });
+
+    // --- EXPORT TO EXCEL (.xlsx) ---
+    document.getElementById('btnExportExcel').addEventListener('click', () => {
+      const group = getActiveGroup();
+      if (!group) {
+        showToast('Eksport qilish uchun guruh mavjud emas!', 'error');
+        return;
+      }
+
+      const year = appData.selectedYear;
+      const students = group.students || [];
+
+      if (students.length === 0) {
+        showToast('Guruhda o\'quvchilar yo\'q!', 'error');
+        return;
+      }
+
+      // Prepare Excel rows
+      const rows = [];
+
+      // Row 1: Header Info
+      rows.push(['O\'QUV JADVALI VA TO\'LOVLAR NAZORATI']);
+      rows.push([`Guruh: ${group.name}`, `Yil: ${year}`, `Standart narx: ${formatMoney(group.defaultPrice)} so'm`]);
+      rows.push([]); // Empty spacer row
+
+      // Table Header
+      const headerRow = [
+        '#',
+        'Familiya va Ism',
+        'Oylik Narx (so\'m)',
+        'Yanvar',
+        'Fevral',
+        'Mart',
+        'Aprel',
+        'May',
+        'Iyun',
+        'Iyul',
+        'Avgust',
+        'Sentabr',
+        'Oktabr',
+        'Noyabr',
+        'Dekabr',
+        'To\'langan oylar',
+        'Jami To\'langan (so\'m)'
+      ];
+      rows.push(headerRow);
+
+      // Data Rows
+      const monthTotals = Array(13).fill(0);
+      let grandTotal = 0;
+
+      students.forEach((student, index) => {
+        const studentPrice = Number(student.price || group.defaultPrice);
+        const payments = student.payments || {};
+
+        let paidCount = 0;
+        const row = [
+          index + 1,
+          student.name,
+          studentPrice
+        ];
+
+        for (let m = 1; m <= 12; m++) {
+          const isPaid = !!payments[`${year}-${m}`];
+          if (isPaid) {
+            paidCount++;
+            monthTotals[m] += studentPrice;
+            row.push('+ (To\'langan)');
+          } else {
+            row.push('-');
+          }
+        }
+
+        const studentTotalPaid = paidCount * studentPrice;
+        grandTotal += studentTotalPaid;
+
+        row.push(paidCount);
+        row.push(studentTotalPaid);
+
+        rows.push(row);
+      });
+
+      // Summary Row
+      const summaryRow = ['JAMI', `${students.length} nafar o'quvchi`, ''];
+      for (let m = 1; m <= 12; m++) {
+        summaryRow.push(monthTotals[m]);
+      }
+      summaryRow.push('');
+      summaryRow.push(grandTotal);
+      rows.push(summaryRow);
+
+      // Create Worksheet using SheetJS
+      try {
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+
+        // Set column widths
+        ws['!cols'] = [
+          { wch: 5 },  // #
+          { wch: 26 }, // Name
+          { wch: 18 }, // Price
+          { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 },
+          { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 },
+          { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 },
+          { wch: 15 }, // Count
+          { wch: 22 }  // Total
+        ];
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, group.name.substring(0, 31));
+
+        const fileName = `${group.name.replace(/[^a-zA-Z0-9_\u0400-\u04FF]/g, '_')}_${year}_Tolovlar.xlsx`;
+        XLSX.writeFile(wb, fileName);
+
+        showToast(`Excel fayl muvaffaqiyatli yuklab olindi!`, 'success');
+      } catch (err) {
+        console.error('Excel export error:', err);
+        showToast('Excelga eksport qilishda xatolik yuz berdi', 'error');
+      }
+    });
+
+    // --- JSON BACKUP & RESTORE ---
+    const btnBackupMenu = document.getElementById('btnBackupMenu');
+    const backupDropdown = document.getElementById('backupDropdown');
+
+    btnBackupMenu.addEventListener('click', (e) => {
+      e.stopPropagation();
+      backupDropdown.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', () => {
+      backupDropdown.classList.add('hidden');
+    });
+
+    // Export JSON
+    document.getElementById('btnExportJson').addEventListener('click', () => {
+      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(appData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      const dateStr = new Date().toISOString().split('T')[0];
+      downloadAnchor.setAttribute('href', dataStr);
+      downloadAnchor.setAttribute('download', `Oquv_Jadval_Baza_${dateStr}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+
+      showToast('Baza JSON formatda yuklandi!', 'success');
+    });
+
+    // Import JSON
+    document.getElementById('importJsonInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const parsed = JSON.parse(event.target.result);
+          if (parsed && Array.isArray(parsed.groups)) {
+            if (confirm('Baza yuklansinmi? Hozirgi barcha ma\'lumotlar fayldagi ma\'lumotlar bilan almashadi.')) {
+              appData = parsed;
+              saveData();
+              renderAll();
+              showToast('Baza muvaffaqiyatli tiklandi!', 'success');
+            }
+          } else {
+            showToast('JSON fayl strukturasi yaroqsiz!', 'error');
+          }
+        } catch (err) {
+          showToast('JSON faylni o\'qishda xatolik!', 'error');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+
+    // --- THEME (DARK / LIGHT) ---
+    const btnThemeToggle = document.getElementById('btnThemeToggle');
+    const htmlElement = document.documentElement;
+
+    // Load Theme
+    const savedTheme = localStorage.getItem('jadval_theme') || 'light';
+    if (savedTheme === 'dark' || (!('jadval_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      htmlElement.classList.add('dark');
+    } else {
+      htmlElement.classList.remove('dark');
+    }
+
+    btnThemeToggle.addEventListener('click', () => {
+      htmlElement.classList.toggle('dark');
+      const isDark = htmlElement.classList.contains('dark');
+      localStorage.setItem('jadval_theme', isDark ? 'dark' : 'light');
+    });
+
+    // Initialize Application
+    loadData();
+    renderAll();
+
+  </script>
+</body>
+
+</html>
