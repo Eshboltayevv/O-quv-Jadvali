@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>O'quv Jadvali & To'lovlar Nazorati</title>
   <meta name="description"
-    content="O'quv markazlari va repetitorlar uchun sodda, tezkor va qulay oylik to'lovlar jadvali (Excel formatida).">
+    content="O'quv markazlari va repetitorlar uchun sodda, tezkor va telefonda qulay oylik to'lovlar jadvali (bitta oy va Excel rejimi).">
 
   <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -55,8 +55,8 @@
   <style>
     /* Custom scrollbar */
     ::-webkit-scrollbar {
-      width: 7px;
-      height: 7px;
+      width: 6px;
+      height: 6px;
     }
 
     ::-webkit-scrollbar-track {
@@ -76,7 +76,7 @@
       background: rgba(100, 116, 139, 0.8);
     }
 
-    /* Sticky columns for Excel-like mobile view */
+    /* Sticky columns */
     .sticky-col-num {
       position: sticky;
       left: 0;
@@ -85,100 +85,137 @@
 
     .sticky-col-name {
       position: sticky;
-      left: 44px;
+      left: 40px;
       z-index: 20;
     }
 
     .sticky-col-price {
       position: sticky;
-      left: 244px;
+      left: 230px;
       z-index: 15;
     }
 
     @media (max-width: 640px) {
+      .sticky-col-name {
+        left: 36px;
+      }
+
       .sticky-col-price {
         position: static;
       }
     }
 
-    /* Plus button pulse effect on click */
+    /* Big tactile paid button */
     .btn-paid-active {
       background: linear-gradient(135deg, #10b981 0%, #059669 100%);
       color: #ffffff;
       box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
-      transform: scale(1.02);
+      transform: scale(1.01);
     }
 
-    .cell-hover:hover {
-      background-color: rgba(99, 102, 241, 0.05);
+    .btn-paid-active:active {
+      transform: scale(0.97);
     }
 
-    .dark .cell-hover:hover {
-      background-color: rgba(99, 102, 241, 0.12);
+    /* Mobile tactile button animation */
+    .btn-touch-tap {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
     }
 
-    /* Smooth Transitions */
+    /* Hide scrollbars for slick mobile tabs */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
     * {
       -webkit-tap-highlight-color: transparent;
     }
   </style>
 </head>
 
-<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200">
+<body
+  class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200">
 
-  <!-- TOP NAVBAR -->
-  <header class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 shadow-sm">
-    <div class="max-w-[1600px] mx-auto px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3">
-      
-      <!-- Brand & Year -->
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-emerald-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
-          <i class="fa-solid fa-table-cells text-lg"></i>
+  <!-- TOP NAVBAR (Compact, mobile-optimized) -->
+  <header
+    class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 shadow-sm">
+    <div class="max-w-[1600px] mx-auto px-2.5 sm:px-6 py-2 flex items-center justify-between gap-2">
+
+      <!-- Logo & App Title -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div
+          class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-emerald-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20 flex-shrink-0">
+          <i class="fa-solid fa-table-cells text-base sm:text-lg"></i>
         </div>
         <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white leading-tight">O'quv Jadvali</h1>
-            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
-              Excel Rejim
+          <div class="flex items-center gap-1.5 sm:gap-2">
+            <h1 class="text-sm sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white leading-tight">O'quv
+              Jadvali</h1>
+            <!-- Storage Status Badge -->
+            <span id="storageBadge"
+              class="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800"
+              title="Barcha ma'lumotlar avtomatik ushbu telefonga/kompyuterga saqlanadi">
+              <i class="fa-solid fa-floppy-disk text-[9px]"></i>
+              <span class="hidden xs:inline">Qurilmada saqlanadi</span>
             </span>
           </div>
-          <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Guruhlar, barcha 12 oy to'lovlari va tezkor hisob-kitob</p>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 hidden md:block">Guruhlar, to'lovlar va tezkor
+            hisob-kitob</p>
         </div>
       </div>
 
       <!-- Year Selector & Action Buttons -->
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1.5 sm:gap-2">
         <!-- Year Switcher -->
-        <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-1 border border-slate-200 dark:border-slate-700">
-          <button id="btnPrevYear" class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 transition" title="Oldingi yil">
-            <i class="fa-solid fa-chevron-left text-xs"></i>
+        <div
+          class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-0.5 sm:p-1 border border-slate-200 dark:border-slate-700">
+          <button id="btnPrevYear"
+            class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 active:scale-90 transition"
+            title="Oldingi yil">
+            <i class="fa-solid fa-chevron-left text-[11px]"></i>
           </button>
-          <span id="currentYearDisplay" class="font-bold font-mono text-sm px-2 text-slate-800 dark:text-slate-200 select-none">2026</span>
-          <button id="btnNextYear" class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 transition" title="Keyingi yil">
-            <i class="fa-solid fa-chevron-right text-xs"></i>
+          <span id="currentYearDisplay"
+            class="font-bold font-mono text-xs sm:text-sm px-1.5 sm:px-2 text-slate-800 dark:text-slate-200 select-none">2026</span>
+          <button id="btnNextYear"
+            class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 active:scale-90 transition"
+            title="Keyingi yil">
+            <i class="fa-solid fa-chevron-right text-[11px]"></i>
           </button>
         </div>
 
         <!-- Excel Export Button -->
-        <button id="btnExportExcel" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-semibold shadow-sm shadow-emerald-600/30 transition" title="Excel (.xlsx) yuklab olish">
-          <i class="fa-solid fa-file-excel text-sm"></i>
-          <span class="hidden md:inline">Excelga yuklash</span>
+        <button id="btnExportExcel"
+          class="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-semibold shadow-sm transition"
+          title="Excel (.xlsx) yuklab olish">
+          <i class="fa-solid fa-file-excel text-xs sm:text-sm"></i>
+          <span class="hidden sm:inline">Excel</span>
         </button>
 
         <!-- JSON Backup / Restore Dropdown Button -->
         <div class="relative">
-          <button id="btnBackupMenu" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-medium border border-slate-200 dark:border-slate-700 transition" title="Baza (JSON) zaxira / yuklash">
+          <button id="btnBackupMenu"
+            class="flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-medium border border-slate-200 dark:border-slate-700 transition"
+            title="Baza (JSON) zaxira / tiklash">
             <i class="fa-solid fa-database text-xs text-brand-500"></i>
-            <span class="hidden lg:inline">Zaxira</span>
-            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+            <span class="hidden md:inline">Zaxira</span>
+            <i class="fa-solid fa-chevron-down text-[9px]"></i>
           </button>
-          
-          <div id="backupDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 p-1.5 z-50 text-xs font-medium">
-            <button id="btnExportJson" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 text-slate-700 dark:text-slate-300">
+
+          <div id="backupDropdown"
+            class="hidden absolute right-0 mt-2 w-52 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 p-1.5 z-50 text-xs font-medium">
+            <button id="btnExportJson"
+              class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 text-slate-700 dark:text-slate-300">
               <i class="fa-solid fa-download text-emerald-500"></i>
               <span>JSON nusxa yuklash</span>
             </button>
-            <label class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 text-slate-700 dark:text-slate-300 cursor-pointer">
+            <label
+              class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2 text-slate-700 dark:text-slate-300 cursor-pointer">
               <i class="fa-solid fa-upload text-blue-500"></i>
               <span>JSON bazani tiklash</span>
               <input type="file" id="importJsonInput" accept=".json" class="hidden" />
@@ -187,9 +224,11 @@
         </div>
 
         <!-- Dark Mode Toggle -->
-        <button id="btnThemeToggle" class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition" title="Mavzu (Kun/Tun)">
-          <i class="fa-solid fa-moon dark:hidden text-sm"></i>
-          <i class="fa-solid fa-sun hidden dark:block text-sm text-amber-400"></i>
+        <button id="btnThemeToggle"
+          class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition"
+          title="Mavzu (Kun/Tun)">
+          <i class="fa-solid fa-moon dark:hidden text-xs sm:text-sm"></i>
+          <i class="fa-solid fa-sun hidden dark:block text-xs sm:text-sm text-amber-400"></i>
         </button>
       </div>
 
@@ -197,39 +236,98 @@
   </header>
 
   <!-- MAIN CONTAINER -->
-  <main class="max-w-[1600px] w-full mx-auto px-2 sm:px-6 py-4 flex-1 flex flex-col gap-4">
+  <main class="max-w-[1600px] w-full mx-auto px-2 sm:px-6 py-2.5 sm:py-4 flex-1 flex flex-col gap-2.5 sm:gap-4">
 
-    <!-- 1. GROUPS BAR & GROUP SETTINGS -->
-    <div class="bg-white dark:bg-slate-900 rounded-2xl p-3 sm:p-4 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
-      
+    <!-- 1. GROUPS BAR & GROUP SETTINGS (Compact on phone) -->
+    <div
+      class="bg-white dark:bg-slate-900 rounded-2xl p-2 sm:p-3 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between gap-2">
+
       <!-- Group Tabs Scrollable -->
-      <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none flex-1" id="groupTabsContainer">
+      <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-0.5 no-scrollbar flex-1 touch-pan-x"
+        id="groupTabsContainer">
         <!-- Rendered by JS -->
       </div>
 
       <!-- Add Group & Group Actions -->
-      <div class="flex items-center gap-2 flex-shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-slate-800">
-        <button id="btnAddNewGroup" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 active:scale-95 text-white text-xs sm:text-sm font-semibold shadow-sm shadow-brand-600/30 transition">
-          <i class="fa-solid fa-plus text-xs"></i>
-          <span>Yangi Guruh</span>
+      <div class="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
+        <button id="btnAddNewGroup"
+          class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 active:scale-95 text-white text-xs font-semibold shadow-sm shadow-brand-600/30 transition">
+          <i class="fa-solid fa-plus text-[11px]"></i>
+          <span class="hidden xs:inline">Guruh</span>
         </button>
 
-        <!-- Edit/Delete Current Group -->
-        <button id="btnEditGroup" class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition" title="Guruh nomini o'zgartirish">
+        <button id="btnEditGroup"
+          class="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition"
+          title="Guruh nomini o'zgartirish">
           <i class="fa-solid fa-pen text-xs"></i>
         </button>
-        <button id="btnDeleteGroup" class="w-9 h-9 flex items-center justify-center rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition" title="Ushbu guruhni o'chirish">
+        <button id="btnDeleteGroup"
+          class="w-8 h-8 flex items-center justify-center rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition"
+          title="Ushbu guruhni o'chirish">
           <i class="fa-solid fa-trash-can text-xs"></i>
         </button>
       </div>
 
     </div>
 
-    <!-- 2. GROUP PRICING & STATS BAR -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-      
-      <!-- Card 1: Default Group Price (User requirement: eng yuqorida narxni 300 ming qilsa hammasiga 300 ming bo'ladi) -->
-      <div class="bg-gradient-to-br from-indigo-50 to-white dark:from-slate-900 dark:to-slate-900/80 rounded-2xl p-3.5 border border-indigo-100 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+    <!-- 2. MOBILE COMPACT SUMMARY & DESKTOP STATS BAR -->
+    <!-- (A) Mobile Compact Bar: Saves huge vertical space on phones so the table is immediately visible! -->
+    <div
+      class="block md:hidden bg-white dark:bg-slate-900 rounded-2xl p-2.5 border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div class="flex items-center justify-between gap-2">
+        <!-- Standart Narx Quick Field -->
+        <div class="flex items-center gap-1.5 flex-1 min-w-0">
+          <span class="text-[11px] font-semibold text-slate-500 flex-shrink-0">Narx:</span>
+          <div class="relative flex-1">
+            <input type="number" id="mobileGroupPriceInput" step="10000" min="0"
+              class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs font-bold font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-500"
+              placeholder="300000">
+            <span
+              class="absolute right-1.5 top-1.5 text-[10px] text-slate-400 font-semibold pointer-events-none">so'm</span>
+          </div>
+          <button id="btnMobileApplyPrice"
+            class="px-2 py-1 bg-brand-600 active:scale-95 text-white rounded-lg text-[11px] font-bold shadow-sm transition flex-shrink-0"
+            title="Barcha o'quvchilarga o'rnatish">
+            Barchaga
+          </button>
+        </div>
+
+        <!-- Toggle Detailed Stats Button -->
+        <button id="btnToggleMobileStats"
+          class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[11px] font-semibold flex items-center gap-1 hover:bg-slate-200 transition flex-shrink-0">
+          <i class="fa-solid fa-chart-pie text-brand-500"></i>
+          <span>Statistika</span>
+          <i id="mobileStatsArrow" class="fa-solid fa-chevron-down text-[9px] transition-transform duration-200"></i>
+        </button>
+      </div>
+
+      <!-- Compact Key Metrics Strip -->
+      <div
+        class="flex items-center justify-between pt-2 mt-2 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+        <div class="flex items-center gap-1">
+          <i class="fa-solid fa-users text-blue-500 text-[10px]"></i>
+          <span class="text-slate-500">O'quvchilar:</span>
+          <span id="mobileStudentCount" class="font-bold font-mono text-slate-800 dark:text-slate-200">0</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <i class="fa-solid fa-calendar-check text-emerald-500 text-[10px]"></i>
+          <span id="mobileActiveMonthLabel" class="text-slate-500">Oy tushumi:</span>
+          <span id="mobileMonthCollected" class="font-bold font-mono text-emerald-600 dark:text-emerald-400">0</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <i class="fa-solid fa-coins text-amber-500 text-[10px]"></i>
+          <span class="text-slate-500">Yillik:</span>
+          <span id="mobileYearCollected" class="font-bold font-mono text-slate-800 dark:text-slate-200">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- (B) Detailed Stats Cards (Always visible on desktop, collapsible on mobile) -->
+    <div id="detailedStatsGrid" class="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+
+      <!-- Card 1: Default Group Price -->
+      <div
+        class="bg-gradient-to-br from-indigo-50 to-white dark:from-slate-900 dark:to-slate-900/80 rounded-2xl p-3 border border-indigo-100 dark:border-slate-800 shadow-sm flex flex-col justify-between">
         <div class="flex items-center justify-between text-xs text-indigo-700 dark:text-indigo-400 font-semibold mb-1">
           <span class="flex items-center gap-1.5">
             <i class="fa-solid fa-tag"></i> Guruh Standart Narxi
@@ -239,29 +337,34 @@
         <div class="flex items-center gap-2 mt-1">
           <div class="relative flex-1">
             <input type="number" id="groupDefaultPriceInput" step="10000" min="0"
-              class="w-full bg-white dark:bg-slate-800 border border-indigo-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-base sm:text-lg font-bold font-mono text-indigo-950 dark:text-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="w-full bg-white dark:bg-slate-800 border border-indigo-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-base font-bold font-mono text-indigo-950 dark:text-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="300000">
             <span class="absolute right-3 top-2.5 text-xs font-semibold text-slate-400 pointer-events-none">so'm</span>
           </div>
-          <button id="btnApplyPriceToAll" class="px-2.5 py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-xl text-xs font-semibold shadow-sm transition flex-shrink-0" title="Ushbu narxni barcha o'quvchilarga o'rnatish">
+          <button id="btnApplyPriceToAll"
+            class="px-2.5 py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-xl text-xs font-semibold shadow-sm transition flex-shrink-0"
+            title="Ushbu narxni barcha o'quvchilarga o'rnatish">
             Barchaga
           </button>
         </div>
-        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 flex items-center gap-1">
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
           <i class="fa-solid fa-circle-info text-[10px] text-indigo-500"></i> Narxni o'zgartirib "Barchaga" ni bosing
         </p>
       </div>
 
       <!-- Card 2: Student Count -->
-      <div class="bg-white dark:bg-slate-900 rounded-2xl p-3.5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+      <div
+        class="bg-white dark:bg-slate-900 rounded-2xl p-3 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
         <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
           <span class="flex items-center gap-1.5">
             <i class="fa-solid fa-user-graduate text-blue-500"></i> O'quvchilar Soni
           </span>
-          <span id="activeGroupBadge" class="text-[11px] font-semibold text-brand-600 bg-brand-50 dark:bg-brand-950/40 px-2 py-0.5 rounded-md">Guruh</span>
+          <span id="activeGroupBadge"
+            class="text-[11px] font-semibold text-brand-600 bg-brand-50 dark:bg-brand-950/40 px-2 py-0.5 rounded-md truncate max-w-[110px]">Guruh</span>
         </div>
-        <div class="mt-2 flex items-baseline gap-2">
-          <span id="totalStudentsCount" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">0</span>
+        <div class="mt-1.5 flex items-baseline gap-2">
+          <span id="totalStudentsCount"
+            class="text-2xl font-extrabold text-slate-900 dark:text-white font-mono">0</span>
           <span class="text-xs text-slate-500 font-medium">nafar o'quvchi</span>
         </div>
         <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between">
@@ -271,17 +374,21 @@
       </div>
 
       <!-- Card 3: Active Month Status -->
-      <div class="bg-white dark:bg-slate-900 rounded-2xl p-3.5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+      <div
+        class="bg-white dark:bg-slate-900 rounded-2xl p-3 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
         <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
           <span class="flex items-center gap-1.5">
             <i class="fa-solid fa-calendar-check text-emerald-500"></i> Tanlangan Oy Tushumi
           </span>
-          <select id="activeMonthSelect" class="bg-slate-100 dark:bg-slate-800 text-xs font-semibold rounded-lg px-2 py-0.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 focus:outline-none">
-            <!-- Populated by JS -->
-          </select>
+          <button id="btnHeaderSelectMonth"
+            class="bg-slate-100 dark:bg-slate-800 text-xs font-semibold rounded-lg px-2 py-0.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-1">
+            <span id="headerMonthLabel">Oktabr</span>
+            <i class="fa-solid fa-chevron-down text-[9px]"></i>
+          </button>
         </div>
-        <div class="mt-2 flex items-baseline justify-between">
-          <span id="activeMonthCollected" class="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">0 so'm</span>
+        <div class="mt-1.5 flex items-baseline justify-between">
+          <span id="activeMonthCollected"
+            class="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">0 so'm</span>
         </div>
         <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between">
           <span>To'laganlar:</span>
@@ -290,68 +397,74 @@
       </div>
 
       <!-- Card 4: Total Group Revenue (Yearly) -->
-      <div class="bg-gradient-to-br from-emerald-50 to-white dark:from-slate-900 dark:to-slate-900/80 rounded-2xl p-3.5 border border-emerald-100 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+      <div
+        class="bg-gradient-to-br from-emerald-50 to-white dark:from-slate-900 dark:to-slate-900/80 rounded-2xl p-3 border border-emerald-100 dark:border-slate-800 shadow-sm flex flex-col justify-between">
         <div class="flex items-center justify-between text-xs text-emerald-700 dark:text-emerald-400 font-semibold">
           <span class="flex items-center gap-1.5">
-            <i class="fa-solid fa-coins"></i> Guruh Yillik Jami Tushumi
+            <i class="fa-solid fa-coins"></i> Guruh Yillik Jami
           </span>
-          <span id="statYearBadge" class="font-mono text-[11px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">2026</span>
+          <span id="statYearBadge"
+            class="font-mono text-[11px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">2026</span>
         </div>
-        <div class="mt-2">
-          <span id="totalYearCollected" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">0 so'm</span>
+        <div class="mt-1.5">
+          <span id="totalYearCollected" class="text-2xl font-extrabold text-slate-900 dark:text-white font-mono">0
+            so'm</span>
         </div>
         <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between">
           <span>Jami qabul qilingan oylar:</span>
-          <span id="totalPaidMonthsCount" class="font-bold font-mono text-emerald-600 dark:text-emerald-400">0 ta plyus</span>
+          <span id="totalPaidMonthsCount" class="font-bold font-mono text-emerald-600 dark:text-emerald-400">0 ta
+            plyus</span>
         </div>
       </div>
 
     </div>
 
-    <!-- 3. QUICK ADD STUDENT & SEARCH TOOLBAR (Excel-like continuous adding) -->
-    <div class="bg-white dark:bg-slate-900 rounded-2xl p-3 sm:p-4 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-      
+    <!-- 3. QUICK ADD STUDENT & SEARCH BAR (Compact and fast entry) -->
+    <div
+      class="bg-white dark:bg-slate-900 rounded-2xl p-2.5 sm:p-3 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5">
+
       <!-- Quick Add Student Form -->
-      <form id="quickAddStudentForm" class="flex flex-wrap sm:flex-nowrap items-center gap-2 flex-1">
-        <div class="relative flex-1 min-w-[200px]">
-          <span class="absolute left-3 top-2.5 text-slate-400 text-xs">
+      <form id="quickAddStudentForm" class="flex items-center gap-1.5 sm:gap-2 flex-1">
+        <div class="relative flex-1 min-w-[140px]">
+          <span class="absolute left-2.5 top-2.5 text-slate-400 text-xs">
             <i class="fa-solid fa-user-plus"></i>
           </span>
-          <input type="text" id="newStudentNameInput" required
-            placeholder="Familiya va Ism kiriting (Masalan: Aliyev Vali) va Enter bosing..."
-            class="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white">
+          <input type="text" id="newStudentNameInput" required placeholder="Familiya va Ism..."
+            class="w-full pl-8 pr-2.5 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white">
         </div>
 
         <!-- Optional custom price for this student -->
-        <div class="relative w-36 sm:w-44 flex-shrink-0">
-          <input type="number" id="newStudentPriceInput" step="10000" min="0"
-            placeholder="Oylik to'lov"
-            class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-bold font-mono focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white"
-            title="Ushbu o'quvchi uchun individual oylik narx (sukut bo'yicha guruh narxi)">
-          <span class="absolute right-2.5 top-2.5 text-[10px] text-slate-400 font-semibold pointer-events-none">so'm</span>
+        <div class="relative w-28 sm:w-36 flex-shrink-0 hidden xs:block">
+          <input type="number" id="newStudentPriceInput" step="10000" min="0" placeholder="Oylik to'lov"
+            class="w-full px-2.5 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-bold font-mono focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white"
+            title="Individual narx">
+          <span class="absolute right-2 top-2.5 text-[9px] text-slate-400 font-semibold pointer-events-none">so'm</span>
         </div>
 
-        <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-sm shadow-brand-600/30 transition flex items-center justify-center gap-1.5 flex-shrink-0">
+        <button type="submit"
+          class="px-3 sm:px-4 py-2 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-sm shadow-brand-600/30 transition flex items-center justify-center gap-1 flex-shrink-0">
           <i class="fa-solid fa-plus text-xs"></i>
-          <span>O'quvchi qo'shish</span>
+          <span>Qo'shish</span>
         </button>
       </form>
 
       <!-- Search & Filters -->
-      <div class="flex items-center gap-2 flex-shrink-0">
-        <div class="relative w-full sm:w-60">
-          <span class="absolute left-3 top-2.5 text-slate-400 text-xs">
+      <div class="flex items-center gap-1.5 flex-shrink-0">
+        <div class="relative flex-1 sm:w-48">
+          <span class="absolute left-2.5 top-2.5 text-slate-400 text-xs">
             <i class="fa-solid fa-magnifying-glass"></i>
           </span>
-          <input type="text" id="searchInput" placeholder="Qidirish (Ism)..."
-            class="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white">
-          <button id="btnClearSearch" class="hidden absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 text-xs">
+          <input type="text" id="searchInput" placeholder="Qidirish..."
+            class="w-full pl-8 pr-7 py-1.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white">
+          <button id="btnClearSearch"
+            class="hidden absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 text-xs">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
 
-        <!-- Month Filter status: All / Only Paid / Debtor -->
-        <select id="filterStatusSelect" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none">
+        <!-- Filter Status -->
+        <select id="filterStatusSelect"
+          class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none">
           <option value="all">Barchasi</option>
           <option value="paid">Faqat to'laganlar</option>
           <option value="debt">Qarzdorlar</option>
@@ -360,62 +473,45 @@
 
     </div>
 
-    <!-- 4. EXCEL-LIKE SPREADSHEET TABLE -->
-    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col flex-1">
-      
-      <!-- Table Header & Instructions note -->
-      <div class="px-4 py-2.5 bg-slate-50/70 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
-        <div class="flex items-center gap-2">
-          <i class="fa-solid fa-circle-question text-brand-500"></i>
-          <span>O'quvchi to'lov qilganda tegishli oy ustunidagi katakchani bosing — u <b>plyus (+)</b> bo'ladi va narx avtomatik hisoblanadi.</span>
+    <!-- 4. SPREADSHEET TABLE CARD -->
+    <div
+      class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col flex-1">
+
+      <!-- Table Controls Bar (View Mode Toggle & Help Hint) -->
+      <div
+        class="px-3 py-2 bg-slate-50/90 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+
+        <!-- Left: Quick hint -->
+        <div class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[11px] sm:text-xs">
+          <i class="fa-solid fa-circle-check text-emerald-500 text-xs"></i>
+          <span>O'quvchi to'lagan bo'lsa katakchani bosing — <b>plyus (+)</b> bo'ladi.</span>
         </div>
-        <div class="flex items-center gap-3 text-[11px] font-medium">
-          <span class="flex items-center gap-1.5">
-            <span class="w-3 h-3 rounded bg-emerald-500 inline-block"></span> To'langan (+)
-          </span>
-          <span class="flex items-center gap-1.5">
-            <span class="w-3 h-3 rounded bg-slate-200 dark:bg-slate-700 inline-block"></span> Kutilmoqda (—)
-          </span>
+
+        <!-- Right: View Mode Switcher [📱 Bitta oy rejimi] vs [📊 12 oy rejimi] -->
+        <div
+          class="flex items-center bg-slate-200/80 dark:bg-slate-700/80 p-0.5 rounded-xl border border-slate-300 dark:border-slate-600">
+          <button id="btnViewSingleMonth"
+            class="px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm"
+            title="Telefonda eng qulay rejim">
+            <i class="fa-solid fa-mobile-screen text-[10px]"></i>
+            <span>Bitta oy</span>
+          </button>
+          <button id="btnViewAllMonths"
+            class="px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            title="Barcha 12 oy jadvali (Excel uslubi)">
+            <i class="fa-solid fa-table-cells text-[10px]"></i>
+            <span class="hidden xs:inline">12 oy (Excel)</span>
+            <span class="xs:hidden">12 oy</span>
+          </button>
         </div>
+
       </div>
 
       <!-- Scrollable Table Container -->
       <div class="overflow-x-auto relative flex-1 touch-pan-x" id="tableScrollContainer">
         <table class="w-full text-left border-collapse text-xs sm:text-sm select-none" id="attendanceTable">
-          <thead>
-            <tr class="bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700 text-xs uppercase tracking-wider">
-              <!-- # -->
-              <th class="py-3 px-2.5 text-center w-11 sticky-col-num bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">#</th>
-              
-              <!-- Familiya Ism -->
-              <th class="py-3 px-3 min-w-[200px] max-w-[220px] sticky-col-name bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.06)]">
-                Familiya va Ism
-              </th>
-
-              <!-- Oylik To'lov Narxi -->
-              <th class="py-3 px-2.5 min-w-[110px] text-right sticky-col-price bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700" title="Har bir o'quvchining oylik to'lovi (tahrirlash uchun bosing)">
-                Oylik Narx
-              </th>
-
-              <!-- 12 Months Columns -->
-              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="1">Yan</th>
-              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="2">Fev</th>
-              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="3">Mar</th>
-              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="4">Apr</th>
-              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="5">May</th>
-              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="6">Iyun</th>
-              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="7">Iyul</th>
-              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="8">Avg</th>
-              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="9">Sen</th>
-              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="10">Okt</th>
-              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="11">Noy</th>
-              <th class="py-3 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700" data-month="12">Dek</th>
-
-              <!-- Stats Columns -->
-              <th class="py-3 px-2 text-center min-w-[70px] border-r border-slate-200 dark:border-slate-700" title="To'langan oylar soni">Oylar</th>
-              <th class="py-3 px-3 text-right min-w-[120px] border-r border-slate-200 dark:border-slate-700">Jami To'langan</th>
-              <th class="py-3 px-2 text-center w-16">Amal</th>
-            </tr>
+          <thead id="tableHead">
+            <!-- Dynamically populated based on view mode (single month vs all 12 months) -->
           </thead>
 
           <tbody id="tableBody" class="divide-y divide-slate-200 dark:divide-slate-800">
@@ -423,7 +519,8 @@
           </tbody>
 
           <!-- Table Summary Footer (JAMI) -->
-          <tfoot id="tableFoot" class="bg-slate-100/90 dark:bg-slate-800/90 font-bold border-t-2 border-slate-300 dark:border-slate-700 text-xs">
+          <tfoot id="tableFoot"
+            class="bg-slate-100/90 dark:bg-slate-800/90 font-bold border-t-2 border-slate-300 dark:border-slate-700 text-xs">
             <!-- Summary calculations generated by JS -->
           </tfoot>
         </table>
@@ -435,40 +532,87 @@
 
   <!-- MODALS -->
 
-  <!-- 1. ADD / EDIT GROUP MODAL -->
-  <div id="groupModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
-      <div class="flex items-center justify-between mb-4">
-        <h3 id="groupModalTitle" class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Yangi Guruh Yaratish</h3>
-        <button id="btnCloseGroupModal" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+  <!-- 1. 12-MONTH PICKER MODAL (User requested: usha oyni o'ziga bosa 12 ta oy ko'rinsin va ixtiyoriy oyni tanlash imkoni bo'lsin) -->
+  <div id="monthPickerModal"
+    class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div
+      class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-4 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
+
+      <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
+        <div>
+          <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <i class="fa-solid fa-calendar-days text-indigo-500"></i>
+            <span>Oyni Tanlang</span>
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Jadvalda ko'rmoqchi bo'lgan oyni bosing:</p>
+        </div>
+        <button id="btnCloseMonthModal"
+          class="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <form id="groupForm" class="flex flex-col gap-4">
+      <!-- 12 Months Grid -->
+      <div class="grid grid-cols-3 gap-2" id="monthPickerGrid">
+        <!-- Rendered by JS -->
+      </div>
+
+      <div
+        class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
+        <span class="flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> Tanlangan oy
+        </span>
+        <button id="btnCancelMonthPicker"
+          class="px-3 py-1.5 rounded-xl font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+          Yopish
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 2. ADD / EDIT GROUP MODAL -->
+  <div id="groupModal"
+    class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div
+      class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
+      <div class="flex items-center justify-between mb-4">
+        <h3 id="groupModalTitle" class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Yangi Guruh
+          Yaratish</h3>
+        <button id="btnCloseGroupModal"
+          class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="groupForm" class="flex flex-col gap-3.5">
         <input type="hidden" id="groupEditId" value="">
-        
+
         <div>
           <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Guruh Nomi</label>
-          <input type="text" id="groupNameInput" required placeholder="Masalan: Ingliz tili - Pre-Intermediate"
+          <input type="text" id="groupNameInput" required placeholder="Masalan: Ingliz tili - 1-guruh"
             class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white">
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Standart Oylik To'lov (so'm)</label>
+          <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Standart Oylik To'lov
+            (so'm)</label>
           <div class="relative">
             <input type="number" id="groupModalPriceInput" required step="10000" min="0" placeholder="300000"
               class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold font-mono focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white">
             <span class="absolute right-3 top-3 text-xs font-semibold text-slate-400">so'm</span>
           </div>
-          <p class="text-[11px] text-slate-400 mt-1">Ushbu guruhdagi yangi o'quvchilar uchun asosiy oylik to'lov summasi.</p>
+          <p class="text-[11px] text-slate-400 mt-1">Ushbu guruhdagi yangi o'quvchilar uchun asosiy oylik to'lov
+            summasi.</p>
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-2">
-          <button type="button" id="btnCancelGroupModal" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+          <button type="button" id="btnCancelGroupModal"
+            class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
             Bekor qilish
           </button>
-          <button type="submit" class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-semibold shadow-sm shadow-brand-600/30 transition">
+          <button type="submit"
+            class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-semibold shadow-sm shadow-brand-600/30 transition">
             Saqlash
           </button>
         </div>
@@ -476,22 +620,26 @@
     </div>
   </div>
 
-  <!-- 2. EDIT STUDENT MODAL -->
-  <div id="studentModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
+  <!-- 3. EDIT STUDENT MODAL -->
+  <div id="studentModal"
+    class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div
+      class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">O'quvchi Ma'lumotlarini Tahrirlash</h3>
-        <button id="btnCloseStudentModal" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+        <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">O'quvchi Ma'lumotlarini Tahrirlash
+        </h3>
+        <button id="btnCloseStudentModal"
+          class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <form id="studentEditForm" class="flex flex-col gap-4">
+      <form id="studentEditForm" class="flex flex-col gap-3.5">
         <input type="hidden" id="studentEditId" value="">
 
         <div>
           <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Familiya va Ism</label>
-          <input type="text" id="editStudentName" required placeholder="Masalan: Karimov Alisher"
+          <input type="text" id="editStudentName" required placeholder="Masalan: Karimov Jasur"
             class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white">
         </div>
 
@@ -500,18 +648,20 @@
             Individual Oylik To'lov Narxi (so'm)
           </label>
           <div class="relative">
-            <input type="number" id="editStudentPrice" required step="10000" min="0" placeholder="200000"
+            <input type="number" id="editStudentPrice" required step="10000" min="0" placeholder="300000"
               class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold font-mono focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white">
             <span class="absolute right-3 top-3 text-xs font-semibold text-slate-400">so'm</span>
           </div>
-          <p class="text-[11px] text-slate-400 mt-1">Masalan, agar bu o'quvchiga chegirma bo'lsa yoki narxi 200 000 so'm bo'lsa, shu yerda belgilang.</p>
+          <p class="text-[11px] text-slate-400 mt-1">Ushbu o'quvchi uchun maxsus narx yoki chegirma bo'lsa kiriting.</p>
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-2">
-          <button type="button" id="btnCancelStudentModal" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+          <button type="button" id="btnCancelStudentModal"
+            class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
             Bekor qilish
           </button>
-          <button type="submit" class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-semibold shadow-sm transition">
+          <button type="submit"
+            class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-semibold shadow-sm transition">
             Saqlash
           </button>
         </div>
@@ -526,7 +676,7 @@
   <script>
     /**
      * O'QUV JADVALI & TO'LOVLAR NAZORATI
-     * Avtomatlashtirilgan, Excel-rejimli lokal tizim
+     * Avtomatlashtirilgan, lokal xotirada saqlanuvchi, mobil moslashuvchan tizim
      */
 
     // Month Names
@@ -545,58 +695,70 @@
       { id: 12, name: 'Dekabr', short: 'Dek' }
     ];
 
-    // LocalStorage Key
+    // LocalStorage Key - Har doim shu qurilmada xavfsiz saqlanadi
     const STORAGE_KEY = 'jadval_edu_app_data';
 
     // Application State
     let appData = {
       selectedYear: 2026,
       activeGroupId: null,
-      activeMonth: 10, // Default to October as mentioned in request
+      activeMonth: 10, // Default to October
+      viewMode: (window.innerWidth < 768) ? 'single' : 'single', // Bitta oy rejimi by default for mobile focus
       groups: []
     };
 
-    // Helper: Format Money
+    // Helper: Format Money (e.g. 300 000)
     function formatMoney(amount) {
       if (amount === undefined || amount === null || isNaN(amount)) return '0';
       return Number(amount).toLocaleString('uz-UZ').replace(/,/g, ' ');
+    }
+
+    // Flash Storage Saved Badge
+    function flashStorageBadge() {
+      const badge = document.getElementById('storageBadge');
+      if (!badge) return;
+      badge.classList.add('bg-emerald-200', 'dark:bg-emerald-900', 'scale-105');
+      setTimeout(() => {
+        badge.classList.remove('bg-emerald-200', 'dark:bg-emerald-900', 'scale-105');
+      }, 400);
     }
 
     // Toast Notification
     function showToast(message, type = 'success') {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
-      
+
       const icons = {
         success: 'fa-circle-check text-emerald-500',
         error: 'fa-circle-exclamation text-rose-500',
         info: 'fa-circle-info text-blue-500'
       };
 
-      toast.className = `flex items-center gap-2.5 px-4 py-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 pointer-events-auto transition-all transform duration-200 translate-y-4 opacity-0`;
+      toast.className = `flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 pointer-events-auto transition-all transform duration-200 translate-y-3 opacity-0`;
       toast.innerHTML = `
-        <i class="fa-solid ${icons[type] || icons.success} text-base"></i>
+        <i class="fa-solid ${icons[type] || icons.success} text-sm"></i>
         <span>${message}</span>
       `;
 
       container.appendChild(toast);
-      
+
       requestAnimationFrame(() => {
-        toast.classList.remove('translate-y-4', 'opacity-0');
+        toast.classList.remove('translate-y-3', 'opacity-0');
       });
 
       setTimeout(() => {
         toast.classList.add('opacity-0', 'translate-y-2');
         setTimeout(() => toast.remove(), 250);
-      }, 2500);
+      }, 2000);
     }
 
-    // Default Demo Data Generator
+    // Initial Demo Data Generator
     function getInitialData() {
       return {
         selectedYear: 2026,
         activeGroupId: 'grp_1',
         activeMonth: 10,
+        viewMode: 'single',
         groups: [
           {
             id: 'grp_1',
@@ -618,7 +780,7 @@
               {
                 id: 'std_2',
                 name: 'Olimov Bekzod',
-                price: 200000, // Custom discounted price example
+                price: 200000,
                 payments: {
                   '2026-9': true,
                   '2026-10': true
@@ -683,12 +845,14 @@
       };
     }
 
-    // Save Data to LocalStorage
+    // Save Data to LocalStorage (Reliable persistence)
     function saveData() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+        flashStorageBadge();
       } catch (e) {
         console.error('Error saving data to localStorage', e);
+        showToast('Xotiraga saqlashda xatolik yuz berdi!', 'error');
       }
     }
 
@@ -707,7 +871,7 @@
         saveData();
       }
 
-      // Ensure valid active group
+      // Ensure valid state structure
       if (!appData.groups || appData.groups.length === 0) {
         appData = getInitialData();
       }
@@ -717,8 +881,11 @@
       if (!appData.selectedYear) {
         appData.selectedYear = 2026;
       }
-      if (!appData.activeMonth) {
+      if (!appData.activeMonth || appData.activeMonth < 1 || appData.activeMonth > 12) {
         appData.activeMonth = 10;
+      }
+      if (!appData.viewMode) {
+        appData.viewMode = 'single';
       }
     }
 
@@ -735,19 +902,17 @@
       appData.groups.forEach(group => {
         const isActive = group.id === appData.activeGroupId;
         const studentCount = group.students ? group.students.length : 0;
-        
+
         const tabBtn = document.createElement('button');
-        tabBtn.className = `flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition flex-shrink-0 ${
-          isActive
-            ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/30'
+        tabBtn.className = `flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex-shrink-0 ${isActive
+            ? 'bg-brand-600 text-white shadow-sm shadow-brand-600/30'
             : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-        }`;
-        
+          }`;
+
         tabBtn.innerHTML = `
-          <i class="fa-solid fa-users text-xs ${isActive ? 'text-white' : 'text-slate-400'}"></i>
-          <span>${group.name}</span>
-          <span class="text-[10px] px-1.5 py-0.5 rounded-full font-mono ${
-            isActive ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+          <i class="fa-solid fa-users text-[10px] ${isActive ? 'text-white' : 'text-slate-400'}"></i>
+          <span class="truncate max-w-[140px]">${group.name}</span>
+          <span class="text-[10px] px-1.5 py-0.2 rounded-full font-mono ${isActive ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
           }">${studentCount}</span>
         `;
 
@@ -763,32 +928,36 @@
       });
     }
 
-    // Render Stats & Default Pricing Controls
+    // Render Stats & Pricing
     function renderStats() {
       const group = getActiveGroup();
       if (!group) return;
 
       const year = appData.selectedYear;
       const month = appData.activeMonth;
+      const monthObj = MONTHS.find(m => m.id === month) || MONTHS[9];
 
-      // Update Group Pricing input
-      const priceInput = document.getElementById('groupDefaultPriceInput');
-      priceInput.value = group.defaultPrice || 300000;
+      // Update Group Pricing inputs
+      document.getElementById('groupDefaultPriceInput').value = group.defaultPrice || 300000;
+      document.getElementById('mobileGroupPriceInput').value = group.defaultPrice || 300000;
 
-      // Update Quick Add Student Price placeholder/default
+      // Update Quick Add Student Price placeholder
       const newStudentPriceInput = document.getElementById('newStudentPriceInput');
-      newStudentPriceInput.placeholder = `${formatMoney(group.defaultPrice)} so'm`;
+      newStudentPriceInput.placeholder = `${formatMoney(group.defaultPrice)}`;
       if (!newStudentPriceInput.value) {
         newStudentPriceInput.value = group.defaultPrice;
       }
 
-      // Group badge in card
+      // Group badge & year badge
       document.getElementById('activeGroupBadge').textContent = group.name;
       document.getElementById('statYearBadge').textContent = year;
+      document.getElementById('headerMonthLabel').textContent = monthObj.name;
+      document.getElementById('mobileActiveMonthLabel').textContent = `${monthObj.short}:`;
 
       // Student Count
       const students = group.students || [];
       document.getElementById('totalStudentsCount').textContent = students.length;
+      document.getElementById('mobileStudentCount').textContent = students.length;
 
       // Average Price
       let totalPrice = 0;
@@ -796,11 +965,9 @@
       const avgPrice = students.length > 0 ? Math.round(totalPrice / students.length) : group.defaultPrice;
       document.getElementById('avgStudentPrice').textContent = `${formatMoney(avgPrice)} so'm`;
 
-      // Active Month Stats
+      // Active Month Stats & Total Year Stats
       let monthPaidCount = 0;
       let monthCollected = 0;
-
-      // Total Year Stats
       let totalYearPaidMonths = 0;
       let totalYearCollected = 0;
 
@@ -823,25 +990,15 @@
         }
       });
 
+      // Desktop stats
       document.getElementById('activeMonthCollected').textContent = `${formatMoney(monthCollected)} so'm`;
       document.getElementById('activeMonthPaidRatio').textContent = `${monthPaidCount} / ${students.length} nafar`;
-
       document.getElementById('totalYearCollected').textContent = `${formatMoney(totalYearCollected)} so'm`;
       document.getElementById('totalPaidMonthsCount').textContent = `${totalYearPaidMonths} ta plyus`;
-    }
 
-    // Render Month Select dropdown in header
-    function renderMonthSelect() {
-      const select = document.getElementById('activeMonthSelect');
-      select.innerHTML = '';
-
-      MONTHS.forEach(m => {
-        const opt = document.createElement('option');
-        opt.value = m.id;
-        opt.textContent = `${m.name}`;
-        if (m.id === appData.activeMonth) opt.selected = true;
-        select.appendChild(opt);
-      });
+      // Mobile compact stats
+      document.getElementById('mobileMonthCollected').textContent = `${formatMoney(monthCollected)} so'm (${monthPaidCount}/${students.length})`;
+      document.getElementById('mobileYearCollected').textContent = `${formatMoney(totalYearCollected)} so'm`;
     }
 
     // Toggle Payment for a student in a specific month
@@ -859,14 +1016,14 @@
       student.payments[key] = !wasPaid;
 
       saveData();
-      renderTableOnly(); // Fast update
+      renderTableOnly(); // Quick update
       renderStats();
 
       const monthName = MONTHS.find(m => m.id === monthId)?.name || `${monthId}-oy`;
       if (!wasPaid) {
-        showToast(`${student.name}: ${monthName} uchun to'lov qabul qilindi (+)!`, 'success');
+        showToast(`${student.name}: ${monthName} uchun to'landi (+) ✓`, 'success');
       } else {
-        showToast(`${student.name}: ${monthName} to'lovi bekor qilindi`, 'info');
+        showToast(`${student.name}: ${monthName} to'lovi bekor qilindi (-)`, 'info');
       }
     }
 
@@ -881,12 +1038,10 @@
       const month = appData.activeMonth;
 
       return (group.students || []).filter(student => {
-        // Search filter
         if (query && !student.name.toLowerCase().includes(query)) {
           return false;
         }
 
-        // Status filter for current month
         if (filterStatus === 'paid') {
           return !!(student.payments && student.payments[`${year}-${month}`]);
         } else if (filterStatus === 'debt') {
@@ -897,29 +1052,218 @@
       });
     }
 
-    // Render Table Content
+    // Month Navigation: Previous Month
+    function goToPrevMonth() {
+      if (appData.activeMonth > 1) {
+        appData.activeMonth--;
+      } else {
+        appData.activeMonth = 12;
+        appData.selectedYear--;
+      }
+      saveData();
+      renderAll();
+    }
+
+    // Month Navigation: Next Month
+    function goToNextMonth() {
+      if (appData.activeMonth < 12) {
+        appData.activeMonth++;
+      } else {
+        appData.activeMonth = 1;
+        appData.selectedYear++;
+      }
+      saveData();
+      renderAll();
+    }
+
+    // Render 12-Month Picker Modal Grid
+    function renderMonthPickerGrid() {
+      const grid = document.getElementById('monthPickerGrid');
+      grid.innerHTML = '';
+      const group = getActiveGroup();
+      const year = appData.selectedYear;
+      const students = group ? (group.students || []) : [];
+
+      MONTHS.forEach(m => {
+        const isCurrentActive = (m.id === appData.activeMonth);
+
+        // Count how many paid in this month
+        let paidCount = 0;
+        let collectedSum = 0;
+        students.forEach(s => {
+          if (s.payments && s.payments[`${year}-${m.id}`]) {
+            paidCount++;
+            collectedSum += Number(s.price || group.defaultPrice);
+          }
+        });
+
+        const card = document.createElement('button');
+        card.className = `p-2.5 rounded-2xl border text-left flex flex-col justify-between transition active:scale-95 ${isCurrentActive
+            ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/30'
+            : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-indigo-400 text-slate-800 dark:text-slate-200'
+          }`;
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-xs sm:text-sm">${m.id}. ${m.name}</span>
+            ${isCurrentActive ? '<i class="fa-solid fa-circle-check text-xs"></i>' : ''}
+          </div>
+          <div class="mt-2">
+            <div class="text-[10px] font-semibold ${isCurrentActive ? 'text-indigo-100' : 'text-emerald-600 dark:text-emerald-400'}">
+              ${paidCount}/${students.length} to'lagan
+            </div>
+            <div class="text-[10px] font-mono font-medium ${isCurrentActive ? 'text-white' : 'text-slate-400'} mt-0.5">
+              ${formatMoney(collectedSum)} so'm
+            </div>
+          </div>
+        `;
+
+        card.addEventListener('click', () => {
+          appData.activeMonth = m.id;
+          saveData();
+          closeMonthPickerModal();
+          renderAll();
+          showToast(`${m.name} oyi tanlandi`, 'info');
+        });
+
+        grid.appendChild(card);
+      });
+    }
+
+    function openMonthPickerModal() {
+      renderMonthPickerGrid();
+      document.getElementById('monthPickerModal').classList.remove('hidden');
+    }
+
+    function closeMonthPickerModal() {
+      document.getElementById('monthPickerModal').classList.add('hidden');
+    }
+
+    // Expose functions globally for inline onclick handlers
+    window.goToPrevMonth = goToPrevMonth;
+    window.goToNextMonth = goToNextMonth;
+    window.openMonthPickerModal = openMonthPickerModal;
+    window.closeMonthPickerModal = closeMonthPickerModal;
+    window.togglePayment = togglePayment;
+
+    // Render Table
     function renderTableOnly() {
       const group = getActiveGroup();
+      const thead = document.getElementById('tableHead');
       const tbody = document.getElementById('tableBody');
       const tfoot = document.getElementById('tableFoot');
       tbody.innerHTML = '';
 
       if (!group) {
-        tbody.innerHTML = `<tr><td colspan="18" class="text-center py-10 text-slate-400">Guruh tanlanmagan</td></tr>`;
+        thead.innerHTML = '';
+        tbody.innerHTML = `<tr><td colspan="10" class="text-center py-10 text-slate-400">Guruh tanlanmagan</td></tr>`;
         tfoot.innerHTML = '';
         return;
       }
 
       const students = getFilteredStudents();
       const year = appData.selectedYear;
+      const month = appData.activeMonth;
+      const currentMonthObj = MONTHS.find(m => m.id === month) || MONTHS[9];
+      const isSingleMode = (appData.viewMode === 'single');
 
+      // Update View Switcher Buttons appearance
+      const btnSingle = document.getElementById('btnViewSingleMonth');
+      const btnAll = document.getElementById('btnViewAllMonths');
+      if (isSingleMode) {
+        btnSingle.className = "px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm";
+        btnAll.className = "px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white";
+      } else {
+        btnAll.className = "px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm";
+        btnSingle.className = "px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white";
+      }
+
+      // ==========================================
+      // 1. RENDER TABLE HEADER (THEAD)
+      // ==========================================
+      if (isSingleMode) {
+        // User requested: "Bitta oy, jami to'langan va amal tursin bitta oyni tepasida 2 ta strelka qo'y u yoqda bu yoqga o'tkazadigan va usha oyni o'ziga bosa 12 ta oy ko'rinsin va ixtiyoriy oyni tanlash imkoni bo'lsin."
+        thead.innerHTML = `
+          <tr class="bg-slate-100/90 dark:bg-slate-800/90 text-slate-600 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700 text-xs">
+            <!-- # -->
+            <th class="py-2.5 px-2 text-center w-10 sticky-col-num bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">#</th>
+            
+            <!-- Familiya va Ism -->
+            <th class="py-2.5 px-3 min-w-[150px] sm:min-w-[180px] sticky-col-name bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.06)]">
+              Familiya va Ism
+            </th>
+
+            <!-- Single Month Column with 2 Navigation Arrows & 12-Month Selector Button -->
+            <th class="py-1.5 px-2 text-center min-w-[150px] sm:min-w-[180px] bg-indigo-50/70 dark:bg-slate-800/90 border-r border-indigo-200 dark:border-slate-700">
+              <div class="flex items-center justify-center gap-1 sm:gap-2">
+                <!-- Left Arrow (<) -->
+                <button onclick="goToPrevMonth()" class="w-8 h-8 flex items-center justify-center rounded-xl bg-white dark:bg-slate-700 hover:bg-indigo-100 dark:hover:bg-slate-600 active:scale-90 text-indigo-700 dark:text-indigo-300 border border-slate-200 dark:border-slate-600 shadow-sm transition" title="Oldingi oy">
+                  <i class="fa-solid fa-chevron-left text-xs"></i>
+                </button>
+                
+                <!-- Month Button (Clicking opens 12-month picker) -->
+                <button onclick="openMonthPickerModal()" class="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm shadow-indigo-600/30 transition" title="Boshqa oy tanlash (12 ta oy ro'yxati)">
+                  <span>${currentMonthObj.name}</span>
+                  <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                </button>
+
+                <!-- Right Arrow (>) -->
+                <button onclick="goToNextMonth()" class="w-8 h-8 flex items-center justify-center rounded-xl bg-white dark:bg-slate-700 hover:bg-indigo-100 dark:hover:bg-slate-600 active:scale-90 text-indigo-700 dark:text-indigo-300 border border-slate-200 dark:border-slate-600 shadow-sm transition" title="Keyingi oy">
+                  <i class="fa-solid fa-chevron-right text-xs"></i>
+                </button>
+              </div>
+            </th>
+
+            <!-- Jami To'langan -->
+            <th class="py-2.5 px-3 text-right min-w-[110px] border-r border-slate-200 dark:border-slate-700">
+              Jami To'langan
+            </th>
+
+            <!-- Amal -->
+            <th class="py-2.5 px-2 text-center w-16">
+              Amal
+            </th>
+          </tr>
+        `;
+      } else {
+        // Desktop 12 Months Excel Table Mode
+        let monthHeaders = '';
+        MONTHS.forEach(m => {
+          const isCurrentActive = (m.id === appData.activeMonth);
+          monthHeaders += `
+            <th class="py-2.5 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-indigo-100/50 ${isCurrentActive ? 'bg-indigo-100/80 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300' : ''
+            }" onclick="appData.activeMonth = ${m.id}; saveData(); renderAll();" title="${m.name} oyi">
+              ${m.short}
+            </th>
+          `;
+        });
+
+        thead.innerHTML = `
+          <tr class="bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700 text-xs uppercase tracking-wider">
+            <th class="py-3 px-2.5 text-center w-11 sticky-col-num bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">#</th>
+            <th class="py-3 px-3 min-w-[190px] sticky-col-name bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.06)]">
+              Familiya va Ism
+            </th>
+            <th class="py-3 px-2.5 min-w-[100px] text-right sticky-col-price bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">
+              Oylik Narx
+            </th>
+            ${monthHeaders}
+            <th class="py-3 px-2 text-center min-w-[65px] border-r border-slate-200 dark:border-slate-700">Oylar</th>
+            <th class="py-3 px-3 text-right min-w-[120px] border-r border-slate-200 dark:border-slate-700">Jami To'langan</th>
+            <th class="py-3 px-2 text-center w-16">Amal</th>
+          </tr>
+        `;
+      }
+
+      // Empty State Check
       if (students.length === 0) {
+        const colSpan = isSingleMode ? 5 : 18;
         tbody.innerHTML = `
           <tr>
-            <td colspan="18" class="text-center py-12 text-slate-400 dark:text-slate-500">
+            <td colspan="${colSpan}" class="text-center py-10 text-slate-400 dark:text-slate-500">
               <i class="fa-solid fa-user-slash text-2xl mb-2 block"></i>
               <p class="font-medium">O'quvchilar mavjud emas yoki qidiruvga mos kelmadi.</p>
-              <p class="text-xs text-slate-400 mt-1">Yuqoridagi maydonga o'quvchi ismini yozib qo'shishingiz mumkin.</p>
+              <p class="text-xs text-slate-400 mt-1">Yuqoridagi maydondan yangi o'quvchi qo'shishingiz mumkin.</p>
             </td>
           </tr>
         `;
@@ -927,14 +1271,16 @@
         return;
       }
 
-      // Track month totals for footer
-      const monthTotals = Array(13).fill(0); // 1..12
+      // ==========================================
+      // 2. RENDER TABLE ROWS (TBODY)
+      // ==========================================
+      const monthTotals = Array(13).fill(0);
       let grandTotal = 0;
-      let totalStudentPrices = 0;
+      let singleMonthTotal = 0;
+      let singleMonthPaidStudents = 0;
 
       students.forEach((student, index) => {
         const studentPrice = Number(student.price || group.defaultPrice);
-        totalStudentPrices += studentPrice;
         const payments = student.payments || {};
 
         let paidCount = 0;
@@ -947,131 +1293,247 @@
         const studentTotalPaid = paidCount * studentPrice;
         grandTotal += studentTotalPaid;
 
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors group';
+        const isMonthPaid = !!payments[`${year}-${month}`];
+        if (isMonthPaid) {
+          singleMonthTotal += studentPrice;
+          singleMonthPaidStudents++;
+        }
 
-        // Check if custom price differs from group default price
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/90 dark:hover:bg-slate-800/60 transition-colors group';
+
         const hasCustomPrice = student.price && student.price !== group.defaultPrice;
 
-        // Construct HTML
-        let monthsHtml = '';
-        for (let m = 1; m <= 12; m++) {
-          const isPaid = !!payments[`${year}-${m}`];
-          const isCurrentActiveMonth = (m === appData.activeMonth);
+        if (isSingleMode) {
+          // ================= SINGLE MONTH MODE =================
+          // Columns: #, Familiya va Ism, Month Column (+ / -), Jami To'langan, Amal
+          tr.innerHTML = `
+            <!-- # -->
+            <td class="py-3 px-2 text-center text-slate-400 dark:text-slate-500 font-mono text-xs sticky-col-num bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
+              ${index + 1}
+            </td>
 
-          monthsHtml += `
-            <td class="p-1 sm:p-1.5 text-center border-r border-slate-200 dark:border-slate-800 ${isCurrentActiveMonth ? 'bg-indigo-50/30 dark:bg-indigo-950/20' : ''}">
-              <button onclick="togglePayment('${student.id}', ${m})"
-                class="w-full py-1.5 sm:py-2 px-1 rounded-lg text-xs font-bold font-mono transition-all duration-150 flex items-center justify-center gap-1 ${
-                  isPaid
-                    ? 'btn-paid-active'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200'
-                }"
-                title="${MONTHS[m-1].name} - ${isPaid ? 'To\'langan (+)' : 'To\'lanmagan (-)'}">
-                ${isPaid ? '<i class="fa-solid fa-plus text-[11px]"></i>' : '<span class="text-slate-300 dark:text-slate-600">—</span>'}
+            <!-- Familiya va Ism + Oylik narx chip -->
+            <td class="py-2.5 px-3 sticky-col-name bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.06)]">
+              <div class="flex flex-col">
+                <div class="flex items-center justify-between gap-1">
+                  <span class="font-bold text-slate-900 dark:text-slate-100 hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer text-xs sm:text-sm truncate" onclick="openEditStudent('${student.id}')" title="Tahrirlash uchun bosing">
+                    ${student.name}
+                  </span>
+                  <button onclick="openEditStudent('${student.id}')" class="text-slate-300 dark:text-slate-600 hover:text-brand-500 text-xs p-1" title="Tahrirlash">
+                    <i class="fa-solid fa-pen text-[10px]"></i>
+                  </button>
+                </div>
+                <!-- Price badge directly under name so user clearly sees the rate -->
+                <div class="flex items-center gap-1 mt-0.5">
+                  <span onclick="openEditStudent('${student.id}')" class="text-[10px] font-mono cursor-pointer px-1.5 py-0.2 rounded font-semibold ${hasCustomPrice
+              ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+            }" title="Oylik to'lov summasi">
+                    ${formatMoney(studentPrice)} so'm/oy
+                  </span>
+                </div>
+              </div>
+            </td>
+
+            <!-- Single Month Big Tactile "+" Button Column -->
+            <td class="p-1.5 text-center border-r border-slate-200 dark:border-slate-800 bg-indigo-50/20 dark:bg-indigo-950/10">
+              <button onclick="togglePayment('${student.id}', appData.activeMonth)"
+                class="w-full py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold font-mono transition-all duration-150 flex items-center justify-center gap-1.5 btn-touch-tap ${isMonthPaid
+              ? 'btn-paid-active'
+              : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700'
+            }"
+                title="${currentMonthObj.name} - ${isMonthPaid ? 'To\'langan (+)' : 'To\'lanmagan (-)'}">
+                ${isMonthPaid
+              ? '<i class="fa-solid fa-check text-xs"></i> <span>+ To\'langan</span>'
+              : '<i class="fa-solid fa-plus text-xs text-brand-500"></i> <span>To\'lash (+)</span>'
+            }
+              </button>
+            </td>
+
+            <!-- Jami To'langan -->
+            <td class="py-2.5 px-3 text-right border-r border-slate-200 dark:border-slate-800">
+              <div class="font-mono font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white">
+                ${formatMoney(studentTotalPaid)} so'm
+              </div>
+              <div class="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                ${paidCount} oy to'langan
+              </div>
+            </td>
+
+            <!-- Amal (Actions) -->
+            <td class="py-2.5 px-1.5 text-center">
+              <div class="flex items-center justify-center gap-1">
+                <button onclick="openEditStudent('${student.id}')" class="w-7 h-7 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition" title="Tahrirlash">
+                  <i class="fa-solid fa-pen text-xs"></i>
+                </button>
+                <button onclick="deleteStudent('${student.id}')" class="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition" title="O'chirish">
+                  <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+              </div>
+            </td>
+          `;
+        } else {
+          // ================= ALL 12 MONTHS MODE =================
+          let monthsHtml = '';
+          for (let m = 1; m <= 12; m++) {
+            const isPaid = !!payments[`${year}-${m}`];
+            const isCurrentActive = (m === appData.activeMonth);
+
+            monthsHtml += `
+              <td class="p-1 sm:p-1.5 text-center border-r border-slate-200 dark:border-slate-800 ${isCurrentActive ? 'bg-indigo-50/40 dark:bg-indigo-950/20' : ''}">
+                <button onclick="togglePayment('${student.id}', ${m})"
+                  class="w-full py-1.5 sm:py-2 px-1 rounded-lg text-xs font-bold font-mono transition-all duration-150 flex items-center justify-center gap-1 ${isPaid
+                ? 'btn-paid-active'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200'
+              }"
+                  title="${MONTHS[m - 1].name} - ${isPaid ? 'To\'langan (+)' : 'To\'lanmagan (-)'}">
+                  ${isPaid ? '<i class="fa-solid fa-plus text-[10px]"></i>' : '<span class="text-slate-300 dark:text-slate-600">—</span>'}
+                </button>
+              </td>
+            `;
+          }
+
+          tr.innerHTML = `
+            <td class="py-2.5 px-2 text-center text-slate-400 dark:text-slate-500 font-mono text-xs sticky-col-num bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
+              ${index + 1}
+            </td>
+            <td class="py-2.5 px-3 sticky-col-name bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.06)]">
+              <div class="flex items-center justify-between gap-1.5">
+                <span class="font-bold text-slate-900 dark:text-slate-100 hover:text-brand-600 cursor-pointer truncate" onclick="openEditStudent('${student.id}')">
+                  ${student.name}
+                </span>
+                <button onclick="openEditStudent('${student.id}')" class="text-slate-400 hover:text-brand-500 text-xs p-1">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+              </div>
+            </td>
+            <td class="py-2.5 px-2.5 text-right sticky-col-price bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
+              <button onclick="openEditStudent('${student.id}')" class="px-2 py-1 rounded-md text-xs font-mono font-bold transition ${hasCustomPrice
+              ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+            }">
+                ${formatMoney(studentPrice)}
+              </button>
+            </td>
+            ${monthsHtml}
+            <td class="py-2.5 px-2 text-center border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-xs ${paidCount > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'
+            }">
+              ${paidCount} oy
+            </td>
+            <td class="py-2.5 px-3 text-right font-mono font-extrabold text-xs sm:text-sm border-r border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+              ${formatMoney(studentTotalPaid)}
+            </td>
+            <td class="py-2.5 px-2 text-center">
+              <button onclick="deleteStudent('${student.id}')" class="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition">
+                <i class="fa-solid fa-trash-can text-xs"></i>
               </button>
             </td>
           `;
         }
 
-        tr.innerHTML = `
-          <!-- # -->
-          <td class="py-2.5 px-2 text-center text-slate-400 dark:text-slate-500 font-mono text-xs sticky-col-num bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
-            ${index + 1}
-          </td>
-
-          <!-- Familiya Ism -->
-          <td class="py-2.5 px-3 sticky-col-name bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.06)]">
-            <div class="flex items-center justify-between gap-1.5">
-              <span class="font-bold text-slate-900 dark:text-slate-100 hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer truncate" onclick="openEditStudent('${student.id}')" title="Tahrirlash uchun bosing">
-                ${student.name}
-              </span>
-              <button onclick="openEditStudent('${student.id}')" class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-brand-500 text-xs transition p-1" title="Tahrirlash">
-                <i class="fa-solid fa-pen"></i>
-              </button>
-            </div>
-          </td>
-
-          <!-- Oylik Narx (Click to customize) -->
-          <td class="py-2.5 px-2.5 text-right sticky-col-price bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
-            <button onclick="openEditStudent('${student.id}')" class="px-2 py-1 rounded-md text-xs font-mono font-bold transition ${
-              hasCustomPrice
-                ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
-            }" title="Individual narxni o'zgartirish">
-              ${formatMoney(studentPrice)}
-            </button>
-          </td>
-
-          <!-- 12 Months -->
-          ${monthsHtml}
-
-          <!-- Paid Months Count -->
-          <td class="py-2.5 px-2 text-center border-r border-slate-200 dark:border-slate-800 font-mono font-bold text-xs ${
-            paidCount > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'
-          }">
-            ${paidCount} oy
-          </td>
-
-          <!-- Total Paid -->
-          <td class="py-2.5 px-3 text-right font-mono font-extrabold text-xs sm:text-sm border-r border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
-            ${formatMoney(studentTotalPaid)}
-          </td>
-
-          <!-- Actions -->
-          <td class="py-2.5 px-2 text-center">
-            <button onclick="deleteStudent('${student.id}')" class="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition" title="O'chirish">
-              <i class="fa-solid fa-trash-can text-xs"></i>
-            </button>
-          </td>
-        `;
-
         tbody.appendChild(tr);
       });
 
-      // Render Summary Footer (JAMI)
-      let footerMonthsHtml = '';
-      for (let m = 1; m <= 12; m++) {
-        footerMonthsHtml += `
-          <td class="py-3 px-1 text-center font-mono text-[11px] border-r border-slate-200 dark:border-slate-700 ${
-            m === appData.activeMonth ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/30 font-extrabold' : 'text-slate-600 dark:text-slate-300'
-          }">
-            ${monthTotals[m] > 0 ? formatMoney(monthTotals[m]) : '—'}
-          </td>
+      // ==========================================
+      // 3. RENDER TABLE FOOTER (TFOOT)
+      // ==========================================
+      if (isSingleMode) {
+        tfoot.innerHTML = `
+          <tr>
+            <td class="py-3 px-2 text-center sticky-col-num bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 font-mono text-slate-400">
+              Σ
+            </td>
+            <td class="py-3 px-3 sticky-col-name bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
+              JAMI (${students.length} nafar)
+            </td>
+            <td class="py-3 px-2 text-center bg-indigo-50/70 dark:bg-slate-800/90 border-r border-indigo-200 dark:border-slate-700 font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
+              <div>${formatMoney(singleMonthTotal)} so'm</div>
+              <div class="text-[10px] font-normal text-slate-500 dark:text-slate-400">${singleMonthPaidStudents}/${students.length} to'lagan</div>
+            </td>
+            <td class="py-3 px-3 text-right font-mono font-extrabold text-sm sm:text-base text-emerald-600 dark:text-emerald-400 border-r border-slate-200 dark:border-slate-700">
+              ${formatMoney(grandTotal)} so'm
+            </td>
+            <td class="py-3 px-2"></td>
+          </tr>
+        `;
+      } else {
+        let footerMonthsHtml = '';
+        for (let m = 1; m <= 12; m++) {
+          footerMonthsHtml += `
+            <td class="py-3 px-1 text-center font-mono text-[11px] border-r border-slate-200 dark:border-slate-700 ${m === appData.activeMonth ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/30 font-extrabold' : 'text-slate-600 dark:text-slate-300'
+            }">
+              ${monthTotals[m] > 0 ? formatMoney(monthTotals[m]) : '—'}
+            </td>
+          `;
+        }
+
+        tfoot.innerHTML = `
+          <tr>
+            <td class="py-3 px-2 text-center sticky-col-num bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 font-mono text-slate-400">
+              Σ
+            </td>
+            <td class="py-3 px-3 sticky-col-name bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
+              JAMI (${students.length} nafar)
+            </td>
+            <td class="py-3 px-2.5 text-right sticky-col-price bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 font-mono text-xs text-slate-500">
+              Guruh
+            </td>
+            ${footerMonthsHtml}
+            <td class="py-3 px-2 text-center border-r border-slate-200 dark:border-slate-700 font-mono text-xs text-slate-500">
+              Jami
+            </td>
+            <td class="py-3 px-3 text-right font-mono font-extrabold text-sm sm:text-base text-emerald-600 dark:text-emerald-400 border-r border-slate-200 dark:border-slate-700">
+              ${formatMoney(grandTotal)} so'm
+            </td>
+            <td class="py-3 px-2"></td>
+          </tr>
         `;
       }
-
-      tfoot.innerHTML = `
-        <tr>
-          <td class="py-3 px-2 text-center sticky-col-num bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 font-mono text-slate-400">
-            Σ
-          </td>
-          <td class="py-3 px-3 sticky-col-name bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
-            JAMI (${students.length} nafar)
-          </td>
-          <td class="py-3 px-2.5 text-right sticky-col-price bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 font-mono text-xs text-slate-500">
-            ~${formatMoney(Math.round(totalStudentPrices / (students.length || 1)))}
-          </td>
-          ${footerMonthsHtml}
-          <td class="py-3 px-2 text-center border-r border-slate-200 dark:border-slate-700 font-mono text-xs text-slate-500">
-            Jami
-          </td>
-          <td class="py-3 px-3 text-right font-mono font-extrabold text-sm sm:text-base text-emerald-600 dark:text-emerald-400 border-r border-slate-200 dark:border-slate-700">
-            ${formatMoney(grandTotal)} so'm
-          </td>
-          <td class="py-3 px-2"></td>
-        </tr>
-      `;
     }
 
     // Render Everything
     function renderAll() {
       document.getElementById('currentYearDisplay').textContent = appData.selectedYear;
       renderGroupTabs();
-      renderMonthSelect();
       renderStats();
       renderTableOnly();
     }
+
+    // --- VIEW MODE TOGGLE (Bitta oy vs 12 oy) ---
+    document.getElementById('btnViewSingleMonth').addEventListener('click', () => {
+      appData.viewMode = 'single';
+      saveData();
+      renderTableOnly();
+    });
+
+    document.getElementById('btnViewAllMonths').addEventListener('click', () => {
+      appData.viewMode = 'all';
+      saveData();
+      renderTableOnly();
+    });
+
+    // Mobile Stats Toggle
+    document.getElementById('btnToggleMobileStats').addEventListener('click', () => {
+      const statsGrid = document.getElementById('detailedStatsGrid');
+      const arrow = document.getElementById('mobileStatsArrow');
+      const isHidden = statsGrid.classList.contains('hidden');
+
+      if (isHidden) {
+        statsGrid.classList.remove('hidden');
+        statsGrid.classList.add('grid');
+        arrow.classList.add('rotate-180');
+      } else {
+        statsGrid.classList.add('hidden');
+        statsGrid.classList.remove('grid');
+        arrow.classList.remove('rotate-180');
+      }
+    });
+
+    // Month picker trigger from header card
+    document.getElementById('btnHeaderSelectMonth').addEventListener('click', openMonthPickerModal);
+    document.getElementById('btnCloseMonthModal').addEventListener('click', closeMonthPickerModal);
+    document.getElementById('btnCancelMonthPicker').addEventListener('click', closeMonthPickerModal);
 
     // --- STUDENT ACTIONS ---
 
@@ -1107,13 +1569,12 @@
 
       showToast(`"${name}" muvaffaqiyatli qo'shildi!`, 'success');
 
-      // Clear name and keep focus for rapid Excel-like data entry
       nameInput.value = '';
       nameInput.focus();
     });
 
     // Delete Student
-    window.deleteStudent = function(studentId) {
+    window.deleteStudent = function (studentId) {
       const group = getActiveGroup();
       if (!group) return;
 
@@ -1129,7 +1590,7 @@
     };
 
     // Open Edit Student Modal
-    window.openEditStudent = function(studentId) {
+    window.openEditStudent = function (studentId) {
       const group = getActiveGroup();
       if (!group) return;
 
@@ -1144,7 +1605,6 @@
       document.getElementById('editStudentName').focus();
     };
 
-    // Close Student Modal
     function closeStudentModal() {
       document.getElementById('studentModal').classList.add('hidden');
     }
@@ -1170,15 +1630,12 @@
       showToast(`O'quvchi ma'lumotlari yangilandi!`, 'success');
     });
 
-    // --- GROUP ACTIONS ---
-
-    // Apply Default Group Price to All Students
-    // (User requirement: eng yuqorida narxni 300 ming qilsa shu guruhni hammasiga 300 ming bo`ladi)
-    document.getElementById('btnApplyPriceToAll').addEventListener('click', () => {
+    // --- GROUP PRICING ACTIONS ("Barchaga") ---
+    function applyGroupPriceToAll(priceValue) {
       const group = getActiveGroup();
       if (!group) return;
 
-      const newPrice = Number(document.getElementById('groupDefaultPriceInput').value);
+      const newPrice = Number(priceValue);
       if (!newPrice || newPrice <= 0) {
         showToast('Iltimos, to\'g\'ri summa kiriting!', 'error');
         return;
@@ -1194,9 +1651,17 @@
         renderAll();
         showToast(`Barcha o'quvchilarga ${formatMoney(newPrice)} so'm narx o'rnatildi!`, 'success');
       }
+    }
+
+    document.getElementById('btnApplyPriceToAll').addEventListener('click', () => {
+      applyGroupPriceToAll(document.getElementById('groupDefaultPriceInput').value);
     });
 
-    // Change group default price on input change (for new students)
+    document.getElementById('btnMobileApplyPrice').addEventListener('click', () => {
+      applyGroupPriceToAll(document.getElementById('mobileGroupPriceInput').value);
+    });
+
+    // Change group default price on input change
     document.getElementById('groupDefaultPriceInput').addEventListener('change', (e) => {
       const group = getActiveGroup();
       if (!group) return;
@@ -1207,6 +1672,19 @@
         renderStats();
       }
     });
+
+    document.getElementById('mobileGroupPriceInput').addEventListener('change', (e) => {
+      const group = getActiveGroup();
+      if (!group) return;
+      const val = Number(e.target.value);
+      if (val > 0) {
+        group.defaultPrice = val;
+        saveData();
+        renderStats();
+      }
+    });
+
+    // --- GROUP MANAGEMENT ---
 
     // Open Add Group Modal
     document.getElementById('btnAddNewGroup').addEventListener('click', () => {
@@ -1231,7 +1709,6 @@
       document.getElementById('groupNameInput').focus();
     });
 
-    // Close Group Modal
     function closeGroupModal() {
       document.getElementById('groupModal').classList.add('hidden');
     }
@@ -1248,7 +1725,6 @@
       if (!name) return;
 
       if (editId) {
-        // Edit existing group
         const group = appData.groups.find(g => g.id === editId);
         if (group) {
           group.name = name;
@@ -1256,7 +1732,6 @@
           showToast(`Guruh muvaffaqiyatli yangilandi!`, 'success');
         }
       } else {
-        // Create new group
         const newGroup = {
           id: 'grp_' + Date.now(),
           name: name,
@@ -1292,8 +1767,7 @@
       }
     });
 
-    // --- YEAR & MONTH CONTROLS ---
-
+    // --- YEAR SELECTOR ---
     document.getElementById('btnPrevYear').addEventListener('click', () => {
       appData.selectedYear--;
       saveData();
@@ -1306,14 +1780,7 @@
       renderAll();
     });
 
-    document.getElementById('activeMonthSelect').addEventListener('change', (e) => {
-      appData.activeMonth = Number(e.target.value);
-      saveData();
-      renderStats();
-      renderTableOnly();
-    });
-
-    // Search and Status Filters
+    // --- SEARCH AND FILTER ---
     const searchInput = document.getElementById('searchInput');
     const btnClearSearch = document.getElementById('btnClearSearch');
 
@@ -1337,7 +1804,7 @@
       renderTableOnly();
     });
 
-    // --- EXPORT TO EXCEL (.xlsx) ---
+    // --- EXCEL EXPORT (.xlsx) ---
     document.getElementById('btnExportExcel').addEventListener('click', () => {
       const group = getActiveGroup();
       if (!group) {
@@ -1353,15 +1820,11 @@
         return;
       }
 
-      // Prepare Excel rows
       const rows = [];
-
-      // Row 1: Header Info
       rows.push(['O\'QUV JADVALI VA TO\'LOVLAR NAZORATI']);
       rows.push([`Guruh: ${group.name}`, `Yil: ${year}`, `Standart narx: ${formatMoney(group.defaultPrice)} so'm`]);
-      rows.push([]); // Empty spacer row
+      rows.push([]);
 
-      // Table Header
       const headerRow = [
         '#',
         'Familiya va Ism',
@@ -1383,7 +1846,6 @@
       ];
       rows.push(headerRow);
 
-      // Data Rows
       const monthTotals = Array(13).fill(0);
       let grandTotal = 0;
 
@@ -1418,7 +1880,6 @@
         rows.push(row);
       });
 
-      // Summary Row
       const summaryRow = ['JAMI', `${students.length} nafar o'quvchi`, ''];
       for (let m = 1; m <= 12; m++) {
         summaryRow.push(monthTotals[m]);
@@ -1427,20 +1888,17 @@
       summaryRow.push(grandTotal);
       rows.push(summaryRow);
 
-      // Create Worksheet using SheetJS
       try {
         const ws = XLSX.utils.aoa_to_sheet(rows);
-
-        // Set column widths
         ws['!cols'] = [
-          { wch: 5 },  // #
-          { wch: 26 }, // Name
-          { wch: 18 }, // Price
+          { wch: 5 },
+          { wch: 26 },
+          { wch: 18 },
           { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 },
           { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 },
           { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 },
-          { wch: 15 }, // Count
-          { wch: 22 }  // Total
+          { wch: 15 },
+          { wch: 22 }
         ];
 
         const wb = XLSX.utils.book_new();
@@ -1449,7 +1907,7 @@
         const fileName = `${group.name.replace(/[^a-zA-Z0-9_\u0400-\u04FF]/g, '_')}_${year}_Tolovlar.xlsx`;
         XLSX.writeFile(wb, fileName);
 
-        showToast(`Excel fayl muvaffaqiyatli yuklab olindi!`, 'success');
+        showToast(`Excel fayl yuklab olindi!`, 'success');
       } catch (err) {
         console.error('Excel export error:', err);
         showToast('Excelga eksport qilishda xatolik yuz berdi', 'error');
@@ -1514,7 +1972,6 @@
     const btnThemeToggle = document.getElementById('btnThemeToggle');
     const htmlElement = document.documentElement;
 
-    // Load Theme
     const savedTheme = localStorage.getItem('jadval_theme') || 'light';
     if (savedTheme === 'dark' || (!('jadval_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       htmlElement.classList.add('dark');
