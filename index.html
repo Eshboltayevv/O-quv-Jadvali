@@ -76,7 +76,73 @@
       background: rgba(100, 116, 139, 0.8);
     }
 
-    /* Sticky columns */
+    /* Sticky Headers and Columns */
+    .sticky-th-top {
+      position: sticky;
+      top: 0;
+      z-index: 25;
+    }
+
+    .sticky-th-num {
+      position: sticky;
+      top: 0;
+      left: 0;
+      z-index: 35;
+    }
+
+    .sticky-th-name {
+      position: sticky;
+      top: 0;
+      left: 28px;
+      z-index: 35;
+    }
+
+    .sticky-th-price {
+      position: sticky;
+      top: 0;
+      left: 168px;
+      z-index: 32;
+    }
+
+    .sticky-td-num {
+      position: sticky;
+      left: 0;
+      z-index: 15;
+    }
+
+    .sticky-td-name {
+      position: sticky;
+      left: 28px;
+      z-index: 15;
+    }
+
+    .sticky-td-price {
+      position: sticky;
+      left: 168px;
+      z-index: 12;
+    }
+
+    .sticky-tf-cell {
+      position: sticky;
+      bottom: 0;
+      z-index: 25;
+    }
+
+    .sticky-tf-num {
+      position: sticky;
+      bottom: 0;
+      left: 0;
+      z-index: 35;
+    }
+
+    .sticky-tf-name {
+      position: sticky;
+      bottom: 0;
+      left: 28px;
+      z-index: 35;
+    }
+
+    /* Backwards compatibility */
     .sticky-col-num {
       position: sticky;
       left: 0;
@@ -85,24 +151,33 @@
 
     .sticky-col-name {
       position: sticky;
-      left: 40px;
+      left: 28px;
       z-index: 20;
     }
 
     .sticky-col-price {
       position: sticky;
-      left: 230px;
+      left: 168px;
       z-index: 15;
     }
 
     @media (max-width: 640px) {
       .sticky-col-name {
-        left: 36px;
+        left: 28px;
       }
 
-      .sticky-col-price {
+      .sticky-col-price,
+      .sticky-th-price,
+      .sticky-td-price {
         position: static;
       }
+    }
+
+    /* Smooth table scrolling and touch gestures */
+    #tableScrollContainer {
+      touch-action: pan-x pan-y;
+      overscroll-behavior-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     /* Big tactile paid button */
@@ -243,7 +318,7 @@
       class="bg-white dark:bg-slate-900 rounded-2xl p-2 sm:p-3 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between gap-2">
 
       <!-- Group Tabs Scrollable -->
-      <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-0.5 no-scrollbar flex-1 touch-pan-x"
+      <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-0.5 no-scrollbar flex-1"
         id="groupTabsContainer">
         <!-- Rendered by JS -->
       </div>
@@ -508,7 +583,8 @@
       </div>
 
       <!-- Scrollable Table Container -->
-      <div class="overflow-x-auto relative flex-1 touch-pan-x" id="tableScrollContainer">
+      <div class="overflow-x-auto overflow-y-auto relative flex-1" id="tableScrollContainer"
+        style="max-height: calc(100dvh - 175px); -webkit-overflow-scrolling: touch;">
         <table class="w-full text-left border-collapse text-xs sm:text-sm select-none" id="attendanceTable">
           <thead id="tableHead">
             <!-- Dynamically populated based on view mode (single month vs all 12 months) -->
@@ -717,10 +793,14 @@
     function flashStorageBadge() {
       const badge = document.getElementById('storageBadge');
       if (!badge) return;
-      badge.classList.add('bg-emerald-200', 'dark:bg-emerald-900', 'scale-105');
+      badge.innerHTML = `<i class="fa-solid fa-check text-[9px]"></i><span>Saqlandi</span>`;
+      badge.classList.remove('bg-emerald-100', 'text-emerald-700', 'border-emerald-300');
+      badge.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600', 'scale-105');
       setTimeout(() => {
-        badge.classList.remove('bg-emerald-200', 'dark:bg-emerald-900', 'scale-105');
-      }, 400);
+        badge.innerHTML = `<i class="fa-solid fa-floppy-disk text-[9px]"></i><span class="hidden xs:inline">Qurilmada saqlanadi</span><span class="xs:hidden">Saqlandi</span>`;
+        badge.classList.remove('bg-emerald-500', 'text-white', 'border-emerald-600', 'scale-105');
+        badge.classList.add('bg-emerald-100', 'text-emerald-700', 'border-emerald-300');
+      }, 700);
     }
 
     // Toast Notification
@@ -845,28 +925,125 @@
       };
     }
 
-    // Save Data to LocalStorage (Reliable persistence)
+    // Dual Storage: IndexedDB Engine for Persistent Mobile & Desktop Storage
+    const DB_NAME = 'JadvalEduStorageDB';
+    const DB_VERSION = 1;
+    const DB_STORE = 'app_state';
+
+    function openIndexedDB() {
+      return new Promise((resolve) => {
+        if (!window.indexedDB) {
+          resolve(null);
+          return;
+        }
+        try {
+          const req = indexedDB.open(DB_NAME, DB_VERSION);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(DB_STORE)) {
+              db.createObjectStore(DB_STORE);
+            }
+          };
+          req.onsuccess = (e) => resolve(e.target.result);
+          req.onerror = () => resolve(null);
+        } catch (e) {
+          resolve(null);
+        }
+      });
+    }
+
+    async function saveToIndexedDB(data) {
+      try {
+        const db = await openIndexedDB();
+        if (!db) return;
+        const tx = db.transaction(DB_STORE, 'readwrite');
+        const store = tx.objectStore(DB_STORE);
+        store.put(JSON.stringify(data), 'current_app_data');
+      } catch (err) {
+        console.warn('IDB save error:', err);
+      }
+    }
+
+    async function loadFromIndexedDB() {
+      try {
+        const db = await openIndexedDB();
+        if (!db) return null;
+        return new Promise((resolve) => {
+          const tx = db.transaction(DB_STORE, 'readonly');
+          const store = tx.objectStore(DB_STORE);
+          const req = store.get('current_app_data');
+          req.onsuccess = () => {
+            if (req.result) {
+              try {
+                resolve(JSON.parse(req.result));
+              } catch (e) {
+                resolve(null);
+              }
+            } else {
+              resolve(null);
+            }
+          };
+          req.onerror = () => resolve(null);
+        });
+      } catch (err) {
+        return null;
+      }
+    }
+
+    // Save Data to LocalStorage & IndexedDB (Reliable persistence on both phone & PC)
     function saveData() {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+        appData.lastUpdated = Date.now();
+        const jsonStr = JSON.stringify(appData);
+        localStorage.setItem(STORAGE_KEY, jsonStr);
+        try {
+          localStorage.setItem('jadval_edu_app_backup', jsonStr);
+        } catch (e) { }
+        saveToIndexedDB(appData);
         flashStorageBadge();
       } catch (e) {
         console.error('Error saving data to localStorage', e);
+        saveToIndexedDB(appData);
         showToast('Xotiraga saqlashda xatolik yuz berdi!', 'error');
       }
     }
 
-    // Load Data from LocalStorage
-    function loadData() {
-      const stored = localStorage.getItem(STORAGE_KEY);
+    // Load Data from LocalStorage & IndexedDB
+    async function loadData() {
+      let loaded = false;
+
+      // 1. Check primary or backup localStorage
+      const stored = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('jadval_edu_app_backup');
       if (stored) {
         try {
-          appData = JSON.parse(stored);
+          const parsed = JSON.parse(stored);
+          if (parsed && Array.isArray(parsed.groups) && parsed.groups.length > 0) {
+            appData = parsed;
+            loaded = true;
+          }
         } catch (e) {
-          console.error('Failed to parse localStorage data', e);
-          appData = getInitialData();
+          console.warn('LocalStorage parse error', e);
         }
-      } else {
+      }
+
+      // 2. Check IndexedDB if localStorage was missing or empty
+      if (!loaded) {
+        try {
+          const idbData = await loadFromIndexedDB();
+          if (idbData && Array.isArray(idbData.groups) && idbData.groups.length > 0) {
+            appData = idbData;
+            loaded = true;
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            } catch (e) { }
+          }
+        } catch (e) {
+          console.warn('IndexedDB load error', e);
+        }
+      }
+
+      // 3. Fallback to Initial Data only on pristine first start
+      if (!loaded) {
         appData = getInitialData();
         saveData();
       }
@@ -887,6 +1064,8 @@
       if (!appData.viewMode) {
         appData.viewMode = 'single';
       }
+
+      renderAll();
     }
 
     // Get Active Group Object
@@ -905,8 +1084,8 @@
 
         const tabBtn = document.createElement('button');
         tabBtn.className = `flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex-shrink-0 ${isActive
-            ? 'bg-brand-600 text-white shadow-sm shadow-brand-600/30'
-            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+          ? 'bg-brand-600 text-white shadow-sm shadow-brand-600/30'
+          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
           }`;
 
         tabBtn.innerHTML = `
@@ -1099,8 +1278,8 @@
 
         const card = document.createElement('button');
         card.className = `p-2.5 rounded-2xl border text-left flex flex-col justify-between transition active:scale-95 ${isCurrentActive
-            ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/30'
-            : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-indigo-400 text-slate-800 dark:text-slate-200'
+          ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/30'
+          : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-indigo-400 text-slate-800 dark:text-slate-200'
           }`;
 
         card.innerHTML = `
@@ -1182,56 +1361,59 @@
       // 1. RENDER TABLE HEADER (THEAD)
       // ==========================================
       if (isSingleMode) {
-        // User requested: "Bitta oy, jami to'langan va amal tursin bitta oyni tepasida 2 ta strelka qo'y u yoqda bu yoqga o'tkazadigan va usha oyni o'ziga bosa 12 ta oy ko'rinsin va ixtiyoriy oyni tanlash imkoni bo'lsin."
+        // Compact mobile-optimized single month table with sticky headers
         thead.innerHTML = `
-          <tr class="bg-slate-100/90 dark:bg-slate-800/90 text-slate-600 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700 text-xs">
+          <tr class="bg-slate-100/95 dark:bg-slate-800/95 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700 text-xs">
             <!-- # -->
-            <th class="py-2.5 px-2 text-center w-10 sticky-col-num bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">#</th>
+            <th class="py-2 px-1 text-center w-7 min-w-[28px] max-w-[28px] sticky-th-num bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 text-[11px]">#</th>
             
-            <!-- Familiya va Ism -->
-            <th class="py-2.5 px-3 min-w-[150px] sm:min-w-[180px] sticky-col-name bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.06)]">
-              Familiya va Ism
+            <!-- Familiya va Ism (Frozen left) -->
+            <th class="py-2 px-2 min-w-[115px] max-w-[145px] sm:min-w-[180px] sticky-th-name bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 shadow-[2px_0_5px_rgba(0,0,0,0.06)]">
+              <div class="truncate">Familiya va Ism</div>
             </th>
 
-            <!-- Single Month Column with 2 Navigation Arrows & 12-Month Selector Button -->
-            <th class="py-1.5 px-2 text-center min-w-[150px] sm:min-w-[180px] bg-indigo-50/70 dark:bg-slate-800/90 border-r border-indigo-200 dark:border-slate-700">
-              <div class="flex items-center justify-center gap-1 sm:gap-2">
+            <!-- Single Month Column (< Oktabr >) -->
+            <th class="py-1 px-1 sm:px-2 text-center min-w-[110px] sm:min-w-[155px] sticky-th-top bg-indigo-50/95 dark:bg-slate-800/95 border-r border-indigo-200 dark:border-slate-700">
+              <div class="flex items-center justify-center gap-1 sm:gap-1.5">
                 <!-- Left Arrow (<) -->
-                <button onclick="goToPrevMonth()" class="w-8 h-8 flex items-center justify-center rounded-xl bg-white dark:bg-slate-700 hover:bg-indigo-100 dark:hover:bg-slate-600 active:scale-90 text-indigo-700 dark:text-indigo-300 border border-slate-200 dark:border-slate-600 shadow-sm transition" title="Oldingi oy">
-                  <i class="fa-solid fa-chevron-left text-xs"></i>
+                <button onclick="goToPrevMonth()" class="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg bg-white dark:bg-slate-700 hover:bg-indigo-100 dark:hover:bg-slate-600 active:scale-90 text-indigo-700 dark:text-indigo-300 border border-slate-200 dark:border-slate-600 shadow-xs transition" title="Oldingi oy">
+                  <i class="fa-solid fa-chevron-left text-[10px]"></i>
                 </button>
                 
                 <!-- Month Button (Clicking opens 12-month picker) -->
-                <button onclick="openMonthPickerModal()" class="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm shadow-indigo-600/30 transition" title="Boshqa oy tanlash (12 ta oy ro'yxati)">
-                  <span>${currentMonthObj.name}</span>
-                  <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                <button onclick="openMonthPickerModal()" class="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs flex items-center gap-1 shadow-xs shadow-indigo-600/30 transition" title="Boshqa oy tanlash (12 oy)">
+                  <span class="truncate">${currentMonthObj.name}</span>
+                  <i class="fa-solid fa-chevron-down text-[8px] sm:text-[9px]"></i>
                 </button>
 
                 <!-- Right Arrow (>) -->
-                <button onclick="goToNextMonth()" class="w-8 h-8 flex items-center justify-center rounded-xl bg-white dark:bg-slate-700 hover:bg-indigo-100 dark:hover:bg-slate-600 active:scale-90 text-indigo-700 dark:text-indigo-300 border border-slate-200 dark:border-slate-600 shadow-sm transition" title="Keyingi oy">
-                  <i class="fa-solid fa-chevron-right text-xs"></i>
+                <button onclick="goToNextMonth()" class="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg bg-white dark:bg-slate-700 hover:bg-indigo-100 dark:hover:bg-slate-600 active:scale-90 text-indigo-700 dark:text-indigo-300 border border-slate-200 dark:border-slate-600 shadow-xs transition" title="Keyingi oy">
+                  <i class="fa-solid fa-chevron-right text-[10px]"></i>
                 </button>
               </div>
             </th>
 
             <!-- Jami To'langan -->
-            <th class="py-2.5 px-3 text-right min-w-[110px] border-r border-slate-200 dark:border-slate-700">
-              Jami To'langan
+            <th class="py-2 px-1.5 sm:px-2.5 text-right min-w-[78px] sm:min-w-[110px] sticky-th-top bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">
+              <div class="truncate text-[11px] sm:text-xs">
+                <span class="hidden sm:inline">Jami To'langan</span>
+                <span class="sm:hidden">Jami</span>
+              </div>
             </th>
 
             <!-- Amal -->
-            <th class="py-2.5 px-2 text-center w-16">
-              Amal
+            <th class="py-2 px-1 text-center w-12 sm:w-16 sticky-th-top bg-slate-100 dark:bg-slate-800">
+              <div class="text-[11px] sm:text-xs">Amal</div>
             </th>
           </tr>
         `;
       } else {
-        // Desktop 12 Months Excel Table Mode
+        // Desktop 12 Months Excel Table Mode with sticky headers
         let monthHeaders = '';
         MONTHS.forEach(m => {
           const isCurrentActive = (m.id === appData.activeMonth);
           monthHeaders += `
-            <th class="py-2.5 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-indigo-100/50 ${isCurrentActive ? 'bg-indigo-100/80 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300' : ''
+            <th class="py-2.5 px-1 text-center w-14 sm:w-16 border-r border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-indigo-100/50 sticky-th-top bg-slate-100 dark:bg-slate-800 ${isCurrentActive ? 'bg-indigo-100/80 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300' : ''
             }" onclick="appData.activeMonth = ${m.id}; saveData(); renderAll();" title="${m.name} oyi">
               ${m.short}
             </th>
@@ -1239,18 +1421,18 @@
         });
 
         thead.innerHTML = `
-          <tr class="bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700 text-xs uppercase tracking-wider">
-            <th class="py-3 px-2.5 text-center w-11 sticky-col-num bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">#</th>
-            <th class="py-3 px-3 min-w-[190px] sticky-col-name bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.06)]">
+          <tr class="bg-slate-100/95 dark:bg-slate-800/95 text-slate-600 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700 text-xs uppercase tracking-wider">
+            <th class="py-3 px-1 text-center w-7 min-w-[28px] sticky-th-num bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">#</th>
+            <th class="py-3 px-3 min-w-[170px] sticky-th-name bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 shadow-[2px_0_5px_rgba(0,0,0,0.06)]">
               Familiya va Ism
             </th>
-            <th class="py-3 px-2.5 min-w-[100px] text-right sticky-col-price bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">
+            <th class="py-3 px-2.5 min-w-[95px] text-right sticky-th-price bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">
               Oylik Narx
             </th>
             ${monthHeaders}
-            <th class="py-3 px-2 text-center min-w-[65px] border-r border-slate-200 dark:border-slate-700">Oylar</th>
-            <th class="py-3 px-3 text-right min-w-[120px] border-r border-slate-200 dark:border-slate-700">Jami To'langan</th>
-            <th class="py-3 px-2 text-center w-16">Amal</th>
+            <th class="py-3 px-2 text-center min-w-[60px] border-r border-slate-200 dark:border-slate-700 sticky-th-top bg-slate-100 dark:bg-slate-800">Oylar</th>
+            <th class="py-3 px-3 text-right min-w-[110px] border-r border-slate-200 dark:border-slate-700 sticky-th-top bg-slate-100 dark:bg-slate-800">Jami To'langan</th>
+            <th class="py-3 px-1 text-center w-12 sticky-th-top bg-slate-100 dark:bg-slate-800">Amal</th>
           </tr>
         `;
       }
@@ -1309,66 +1491,66 @@
           // Columns: #, Familiya va Ism, Month Column (+ / -), Jami To'langan, Amal
           tr.innerHTML = `
             <!-- # -->
-            <td class="py-3 px-2 text-center text-slate-400 dark:text-slate-500 font-mono text-xs sticky-col-num bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
+            <td class="py-2 px-1 text-center text-slate-400 dark:text-slate-500 font-mono text-[11px] sticky-td-num bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
               ${index + 1}
             </td>
 
-            <!-- Familiya va Ism + Oylik narx chip -->
-            <td class="py-2.5 px-3 sticky-col-name bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.06)]">
-              <div class="flex flex-col">
+            <!-- Familiya va Ism + Oylik narx chip (Frozen left) -->
+            <td class="py-1.5 px-2 sticky-td-name bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-[2px_0_5px_rgba(0,0,0,0.06)]">
+              <div class="flex flex-col min-w-0">
                 <div class="flex items-center justify-between gap-1">
-                  <span class="font-bold text-slate-900 dark:text-slate-100 hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer text-xs sm:text-sm truncate" onclick="openEditStudent('${student.id}')" title="Tahrirlash uchun bosing">
+                  <span class="font-bold text-slate-900 dark:text-slate-100 hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer text-xs sm:text-sm truncate" onclick="openEditStudent('${student.id}')" title="${student.name}">
                     ${student.name}
                   </span>
-                  <button onclick="openEditStudent('${student.id}')" class="text-slate-300 dark:text-slate-600 hover:text-brand-500 text-xs p-1" title="Tahrirlash">
-                    <i class="fa-solid fa-pen text-[10px]"></i>
+                  <button onclick="openEditStudent('${student.id}')" class="text-slate-300 dark:text-slate-600 hover:text-brand-500 text-[10px] p-0.5 flex-shrink-0" title="Tahrirlash">
+                    <i class="fa-solid fa-pen"></i>
                   </button>
                 </div>
                 <!-- Price badge directly under name so user clearly sees the rate -->
                 <div class="flex items-center gap-1 mt-0.5">
-                  <span onclick="openEditStudent('${student.id}')" class="text-[10px] font-mono cursor-pointer px-1.5 py-0.2 rounded font-semibold ${hasCustomPrice
+                  <span onclick="openEditStudent('${student.id}')" class="text-[9px] sm:text-[10px] font-mono cursor-pointer px-1 py-0.2 rounded font-semibold w-fit ${hasCustomPrice
               ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
               : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
             }" title="Oylik to'lov summasi">
-                    ${formatMoney(studentPrice)} so'm/oy
+                    ${formatMoney(studentPrice)}
                   </span>
                 </div>
               </div>
             </td>
 
-            <!-- Single Month Big Tactile "+" Button Column -->
-            <td class="p-1.5 text-center border-r border-slate-200 dark:border-slate-800 bg-indigo-50/20 dark:bg-indigo-950/10">
+            <!-- Single Month Tactile Button Column -->
+            <td class="p-1 sm:p-1.5 text-center border-r border-slate-200 dark:border-slate-800 bg-indigo-50/20 dark:bg-indigo-950/10">
               <button onclick="togglePayment('${student.id}', appData.activeMonth)"
-                class="w-full py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold font-mono transition-all duration-150 flex items-center justify-center gap-1.5 btn-touch-tap ${isMonthPaid
+                class="w-full py-1.5 sm:py-2 px-1.5 rounded-lg text-xs font-bold font-mono transition-all duration-150 flex items-center justify-center gap-1 btn-touch-tap ${isMonthPaid
               ? 'btn-paid-active'
-              : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700'
+              : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700'
             }"
                 title="${currentMonthObj.name} - ${isMonthPaid ? 'To\'langan (+)' : 'To\'lanmagan (-)'}">
                 ${isMonthPaid
-              ? '<i class="fa-solid fa-check text-xs"></i> <span>+ To\'langan</span>'
-              : '<i class="fa-solid fa-plus text-xs text-brand-500"></i> <span>To\'lash (+)</span>'
+              ? '<i class="fa-solid fa-check text-[11px]"></i> <span>+ To\'langan</span>'
+              : '<i class="fa-solid fa-plus text-[10px] text-brand-500"></i> <span>To\'lash (+)</span>'
             }
               </button>
             </td>
 
             <!-- Jami To'langan -->
-            <td class="py-2.5 px-3 text-right border-r border-slate-200 dark:border-slate-800">
+            <td class="py-1.5 px-1.5 sm:px-2.5 text-right border-r border-slate-200 dark:border-slate-800">
               <div class="font-mono font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white">
-                ${formatMoney(studentTotalPaid)} so'm
+                ${formatMoney(studentTotalPaid)}
               </div>
-              <div class="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                ${paidCount} oy to'langan
+              <div class="text-[9px] sm:text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                ${paidCount} oy
               </div>
             </td>
 
             <!-- Amal (Actions) -->
-            <td class="py-2.5 px-1.5 text-center">
-              <div class="flex items-center justify-center gap-1">
-                <button onclick="openEditStudent('${student.id}')" class="w-7 h-7 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition" title="Tahrirlash">
-                  <i class="fa-solid fa-pen text-xs"></i>
+            <td class="py-1.5 px-0.5 text-center">
+              <div class="flex items-center justify-center gap-0.5">
+                <button onclick="openEditStudent('${student.id}')" class="w-6 h-6 rounded-md text-slate-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-950/40 transition flex items-center justify-center" title="Tahrirlash">
+                  <i class="fa-solid fa-pen text-[10px]"></i>
                 </button>
-                <button onclick="deleteStudent('${student.id}')" class="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition" title="O'chirish">
-                  <i class="fa-solid fa-trash-can text-xs"></i>
+                <button onclick="deleteStudent('${student.id}')" class="w-6 h-6 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition flex items-center justify-center" title="O'chirish">
+                  <i class="fa-solid fa-trash-can text-[10px]"></i>
                 </button>
               </div>
             </td>
@@ -1395,10 +1577,10 @@
           }
 
           tr.innerHTML = `
-            <td class="py-2.5 px-2 text-center text-slate-400 dark:text-slate-500 font-mono text-xs sticky-col-num bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
+            <td class="py-2.5 px-1 text-center text-slate-400 dark:text-slate-500 font-mono text-xs sticky-td-num bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
               ${index + 1}
             </td>
-            <td class="py-2.5 px-3 sticky-col-name bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.06)]">
+            <td class="py-2.5 px-3 sticky-td-name bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-[2px_0_5px_rgba(0,0,0,0.06)]">
               <div class="flex items-center justify-between gap-1.5">
                 <span class="font-bold text-slate-900 dark:text-slate-100 hover:text-brand-600 cursor-pointer truncate" onclick="openEditStudent('${student.id}')">
                   ${student.name}
@@ -1408,7 +1590,7 @@
                 </button>
               </div>
             </td>
-            <td class="py-2.5 px-2.5 text-right sticky-col-price bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
+            <td class="py-2.5 px-2.5 text-right sticky-td-price bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
               <button onclick="openEditStudent('${student.id}')" class="px-2 py-1 rounded-md text-xs font-mono font-bold transition ${hasCustomPrice
               ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
               : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
@@ -1424,7 +1606,7 @@
             <td class="py-2.5 px-3 text-right font-mono font-extrabold text-xs sm:text-sm border-r border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
               ${formatMoney(studentTotalPaid)}
             </td>
-            <td class="py-2.5 px-2 text-center">
+            <td class="py-2.5 px-1 text-center">
               <button onclick="deleteStudent('${student.id}')" class="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition">
                 <i class="fa-solid fa-trash-can text-xs"></i>
               </button>
@@ -1440,28 +1622,28 @@
       // ==========================================
       if (isSingleMode) {
         tfoot.innerHTML = `
-          <tr>
-            <td class="py-3 px-2 text-center sticky-col-num bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 font-mono text-slate-400">
+          <tr class="bg-slate-100/95 dark:bg-slate-800/95 font-bold border-t-2 border-slate-300 dark:border-slate-700 text-xs">
+            <td class="py-2 px-1 text-center sticky-tf-num bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 font-mono text-slate-400 text-[11px]">
               Σ
             </td>
-            <td class="py-3 px-3 sticky-col-name bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
-              JAMI (${students.length} nafar)
+            <td class="py-2 px-2 sticky-tf-name bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-[11px] sm:text-xs shadow-[2px_0_5px_rgba(0,0,0,0.06)]">
+              JAMI (${students.length})
             </td>
-            <td class="py-3 px-2 text-center bg-indigo-50/70 dark:bg-slate-800/90 border-r border-indigo-200 dark:border-slate-700 font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
+            <td class="py-2 px-1 text-center sticky-tf-cell bg-indigo-50/95 dark:bg-slate-800/95 border-r border-indigo-200 dark:border-slate-700 font-mono font-extrabold text-emerald-600 dark:text-emerald-400 text-xs">
               <div>${formatMoney(singleMonthTotal)} so'm</div>
-              <div class="text-[10px] font-normal text-slate-500 dark:text-slate-400">${singleMonthPaidStudents}/${students.length} to'lagan</div>
+              <div class="text-[9px] font-normal text-slate-500 dark:text-slate-400">${singleMonthPaidStudents}/${students.length} to'lagan</div>
             </td>
-            <td class="py-3 px-3 text-right font-mono font-extrabold text-sm sm:text-base text-emerald-600 dark:text-emerald-400 border-r border-slate-200 dark:border-slate-700">
+            <td class="py-2 px-1.5 sm:px-2.5 text-right font-mono font-extrabold text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 border-r border-slate-200 dark:border-slate-700 sticky-tf-cell bg-slate-100 dark:bg-slate-800">
               ${formatMoney(grandTotal)} so'm
             </td>
-            <td class="py-3 px-2"></td>
+            <td class="py-2 px-1 sticky-tf-cell bg-slate-100 dark:bg-slate-800"></td>
           </tr>
         `;
       } else {
         let footerMonthsHtml = '';
         for (let m = 1; m <= 12; m++) {
           footerMonthsHtml += `
-            <td class="py-3 px-1 text-center font-mono text-[11px] border-r border-slate-200 dark:border-slate-700 ${m === appData.activeMonth ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/30 font-extrabold' : 'text-slate-600 dark:text-slate-300'
+            <td class="py-3 px-1 text-center font-mono text-[11px] border-r border-slate-200 dark:border-slate-700 sticky-tf-cell bg-slate-100 dark:bg-slate-800 ${m === appData.activeMonth ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/30 font-extrabold' : 'text-slate-600 dark:text-slate-300'
             }">
               ${monthTotals[m] > 0 ? formatMoney(monthTotals[m]) : '—'}
             </td>
@@ -1469,24 +1651,24 @@
         }
 
         tfoot.innerHTML = `
-          <tr>
-            <td class="py-3 px-2 text-center sticky-col-num bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 font-mono text-slate-400">
+          <tr class="bg-slate-100/95 dark:bg-slate-800/95 font-bold border-t-2 border-slate-300 dark:border-slate-700 text-xs">
+            <td class="py-3 px-1 text-center sticky-tf-num bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 font-mono text-slate-400">
               Σ
             </td>
-            <td class="py-3 px-3 sticky-col-name bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
+            <td class="py-3 px-3 sticky-tf-name bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 font-extrabold text-slate-900 dark:text-white uppercase tracking-wider shadow-[2px_0_5px_rgba(0,0,0,0.06)]">
               JAMI (${students.length} nafar)
             </td>
-            <td class="py-3 px-2.5 text-right sticky-col-price bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 font-mono text-xs text-slate-500">
+            <td class="py-3 px-2.5 text-right sticky-tf-price bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 font-mono text-xs text-slate-500">
               Guruh
             </td>
             ${footerMonthsHtml}
-            <td class="py-3 px-2 text-center border-r border-slate-200 dark:border-slate-700 font-mono text-xs text-slate-500">
+            <td class="py-3 px-2 text-center border-r border-slate-200 dark:border-slate-700 font-mono text-xs text-slate-500 sticky-tf-cell bg-slate-100 dark:bg-slate-800">
               Jami
             </td>
-            <td class="py-3 px-3 text-right font-mono font-extrabold text-sm sm:text-base text-emerald-600 dark:text-emerald-400 border-r border-slate-200 dark:border-slate-700">
+            <td class="py-3 px-3 text-right font-mono font-extrabold text-sm sm:text-base text-emerald-600 dark:text-emerald-400 border-r border-slate-200 dark:border-slate-700 sticky-tf-cell bg-slate-100 dark:bg-slate-800">
               ${formatMoney(grandTotal)} so'm
             </td>
-            <td class="py-3 px-2"></td>
+            <td class="py-3 px-1 sticky-tf-cell bg-slate-100 dark:bg-slate-800"></td>
           </tr>
         `;
       }
@@ -1985,9 +2167,17 @@
       localStorage.setItem('jadval_theme', isDark ? 'dark' : 'light');
     });
 
+    // Auto-save listeners to guarantee persistence across mobile app switches, locking screen, or tab closing
+    window.addEventListener('beforeunload', () => saveData());
+    window.addEventListener('pagehide', () => saveData());
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        saveData();
+      }
+    });
+
     // Initialize Application
     loadData();
-    renderAll();
 
   </script>
 </body>
